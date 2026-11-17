@@ -1213,3 +1213,6 @@ html.promo-hidden .promo-banner { display: none; }
 .email-chooser-options .btn{width:100%;justify-content:center;text-align:center}
 .email-chooser-close{position:absolute;top:.4rem;right:.6rem;background:none;border:0;font-size:1.8rem;line-height:1;cursor:pointer;color:var(--cocoa)}
 .email-chooser-note{margin:.75rem 0 0;min-height:1.2em;font-size:.95rem;color:var(--mint-deep)}
+.testimonials-note{margin:.75rem auto 0;max-width:34rem;font-size:.95rem;opacity:.85;text-align:center}
+.footer-survey{margin-top:.5rem}
+.footer-survey a{text-decoration:underline}
