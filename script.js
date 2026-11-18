@@ -489,13 +489,31 @@
     target.classList.add("order-flash");
   });
 
-  // Floating Order Now button hides while the form is on screen
+  // Floating Order Now button: hide at the top of the page and while the form is on screen
   var floatBtn = document.querySelector("[data-float-order]");
   var orderSection = document.getElementById("order");
-  if (floatBtn && orderSection && "IntersectionObserver" in window) {
-    new IntersectionObserver(function (entries) {
-      floatBtn.classList.toggle("is-hidden", entries[0].isIntersecting);
-    }, { threshold: 0.05 }).observe(orderSection);
+  if (floatBtn && "IntersectionObserver" in window) {
+    var hideFloat = { order: false, hero: true };
+    var syncFloat = function () {
+      floatBtn.classList.toggle("is-hidden", hideFloat.order || hideFloat.hero);
+    };
+    if (orderSection) {
+      new IntersectionObserver(function (entries) {
+        hideFloat.order = entries[0].isIntersecting;
+        syncFloat();
+      }, { threshold: 0.05 }).observe(orderSection);
+    }
+    var hero = document.querySelector(".hero");
+    if (hero) {
+      // Hide the button while any of the hero is in the main view so it does not cover CTAs or text
+      new IntersectionObserver(function (entries) {
+        hideFloat.hero = entries[0].isIntersecting;
+        syncFloat();
+      }, { threshold: 0, rootMargin: "-80px 0px -90px 0px" }).observe(hero);
+    } else {
+      hideFloat.hero = false;
+      syncFloat();
+    }
   }
 
   var dateInput = form.elements["date-needed"];
@@ -607,5 +625,38 @@
     banner.hidden = true;
     document.documentElement.classList.add("promo-hidden");
     try { sessionStorage.setItem("sw-promo-dismissed-2026-thanks", "1"); } catch (e) {}
+  });
+})();
+
+
+// Compact header menu (phones, tablets, and small laptops)
+(function () {
+  var header = document.querySelector(".site-header");
+  var btn = document.querySelector(".nav-toggle");
+  var nav = document.getElementById("site-nav");
+  if (!header || !btn || !nav) return;
+
+  function setOpen(open) {
+    header.classList.toggle("nav-open", open);
+    document.body.classList.toggle("nav-open", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  }
+
+  btn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    setOpen(!header.classList.contains("nav-open"));
+  });
+  nav.addEventListener("click", function (e) {
+    if (e.target.closest("a")) setOpen(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") setOpen(false);
+  });
+  document.addEventListener("click", function (e) {
+    if (header.classList.contains("nav-open") && !header.contains(e.target)) setOpen(false);
+  });
+  window.addEventListener("resize", function () {
+    if (window.matchMedia("(min-width: 1100px)").matches) setOpen(false);
   });
 })();
