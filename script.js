@@ -455,6 +455,17 @@
 
   form.querySelectorAll(".order-row").forEach(updateRow);
 
+  function syncChoices() {
+    form.querySelectorAll(".choice").forEach(function (label) {
+      var input = label.querySelector("input");
+      label.classList.toggle("is-checked", !!(input && input.checked));
+    });
+  }
+  form.addEventListener("change", function (e) {
+    if (e.target && e.target.closest && e.target.closest(".choice")) syncChoices();
+  });
+  syncChoices();
+
   // Order buttons on menu items: jump to the form with that item picked
   document.addEventListener("click", function (e) {
     var link = e.target.closest("[data-order]");
@@ -466,7 +477,7 @@
       var custom = form.elements.custom;
       target = custom.closest("fieldset");
       target.scrollIntoView({ behavior: "smooth", block: "start" });
-      setTimeout(function () { custom.focus({ preventScroll: true }); }, 500);
+      setTimeout(function () { try { custom.focus({ preventScroll: true }); } catch (err) { custom.focus(); } }, 500);
     } else {
       target = form.querySelector('fieldset[data-repeat="' + kind + '"]');
       if (!target) return;
@@ -493,7 +504,7 @@
       var empty = Array.prototype.find.call(row.querySelectorAll("select"), function (sel) {
         return !sel.value && !sel.closest("[hidden]");
       });
-      setTimeout(function () { (empty || focusEl || row).focus({ preventScroll: true }); }, 500);
+      setTimeout(function () { var toFocus = empty || focusEl || row; try { toFocus.focus({ preventScroll: true }); } catch (err) { toFocus.focus(); } }, 500);
     }
     target.classList.remove("order-flash");
     void target.offsetWidth;
@@ -530,7 +541,17 @@
   var dateInput = form.elements["date-needed"];
   if (dateInput) {
     var t = new Date();
-    dateInput.min = t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+    var mm = String(t.getMonth() + 1);
+    var dd = String(t.getDate());
+    if (mm.length < 2) mm = "0" + mm;
+    if (dd.length < 2) dd = "0" + dd;
+    dateInput.min = t.getFullYear() + "-" + mm + "-" + dd;
+    if (dateInput.type !== "date") {
+      dateInput.setAttribute("placeholder", "YYYY-MM-DD");
+      dateInput.setAttribute("pattern", "\\d{4}-\\d{2}-\\d{2}");
+      dateInput.setAttribute("title", "Enter the date as YYYY-MM-DD");
+      dateInput.setAttribute("inputmode", "numeric");
+    }
   }
   updateEstimate();
   var deliveryInit = form.querySelector("[data-delivery-area]");
@@ -823,9 +844,25 @@
       var done = function (ok) {
         note.textContent = ok ? "Email address copied." : "Our email is " + ADDR;
       };
+      function fallbackCopy() {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.top = "0";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        var ok = false;
+        try { ok = document.execCommand("copy"); } catch (err) {}
+        document.body.removeChild(ta);
+        done(ok);
+      }
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
-      } else { done(false); }
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { fallbackCopy(); });
+      } else { fallbackCopy(); }
     }
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !modal.hidden) close(); });
@@ -897,6 +934,9 @@
 // Network-first in sw.js, so online visitors always get the current pages.
 (function () {
   if (!("serviceWorker" in navigator)) return;
+  var host = location.hostname;
+  var secure = location.protocol === "https:" || host === "localhost" || host === "127.0.0.1";
+  if (!secure) return;
   window.addEventListener("load", function () {
     navigator.serviceWorker.register("/sw.js").catch(function () {});
   });
