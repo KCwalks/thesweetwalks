@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1117h">
+  <link rel="stylesheet" href="styles.css?v=1117i">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -138,15 +138,22 @@
 }
   </script>
   <script>
-    try { if (sessionStorage.getItem("sw-promo-dismissed-2026-thanks")) document.documentElement.classList.add("promo-hidden"); } catch (e) {}
+    try {
+      if (sessionStorage.getItem("sw-promo-dismissed-2026-thanks")) document.documentElement.classList.add("promo-hidden");
+      var parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+      var g = {};
+      parts.forEach(function (p) { g[p.type] = p.value; });
+      if ((g.year + g.month + g.day + g.hour + g.minute + g.second) > "20261122235959") document.documentElement.classList.add("promo-hidden", "thanks-cutoff-passed");
+    } catch (e) {}
   </script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
-  <div class="promo-banner" data-promo-banner>
+  <div class="promo-banner" data-promo-banner data-thanks-cutoff-banner>
     <div class="wrap promo-inner">
-      <p>Thanksgiving pre-orders are open. Thursday, Nov 26. Holiday dates fill up fast.</p>
+      <p class="promo-cutoff" data-thanks-cutoff>Last day for Thanksgiving orders is Sunday 11/22!</p>
+      <p>Thursday, Nov 26. Holiday dates fill up fast.</p>
       <a href="#order">Order now</a>
       <button type="button" class="promo-dismiss" data-promo-dismiss aria-label="Dismiss holiday announcement">&times;</button>
     </div>
@@ -216,6 +223,7 @@
           <svg class="banner-deco right" viewBox="0 0 24 28" aria-hidden="true"><path fill="currentColor" d="M12 1c.4 3-.3 5-2 6.8C6.6 10.8 2.2 9.8 1.4 12.8c2.3.6 3.6 1.4 3.6 3.1C3.2 16.3 1.5 17 0 19c2.7.3 4.6.2 6.4-.8-.4 1.9-1.6 3.4-3.1 5 2.5-.2 4.1-1 5.4-2.3.3 2.1.1 4-.6 5.8 1.3-1 1.9-2.1 1.9-3.8 0 1.7.7 2.8 1.9 3.8-.7-1.8-.9-3.7-.6-5.8 1.3 1.3 2.9 2.1 5.4 2.3-1.5-1.6-2.7-3.1-3.1-5 1.8 1 3.7 1.1 6.4.8-1.5-2-3.2-2.7-5-3.1 0-1.7 1.3-2.5 3.6-3.1C21.8 9.8 17.4 10.8 14 7.8 12.3 6 11.6 4 12 1z"/></svg>
           <p class="banner-kicker">Now taking holiday orders</p>
           <h2>Thanksgiving Pre-Orders Are Open</h2>
+          <p class="banner-cutoff" data-thanks-cutoff>Last day for Thanksgiving orders is Sunday 11/22!</p>
           <p>Thanksgiving is Thursday, Nov 26. Reserve your cakes, pies, and cookie trays early.</p>
           <p class="banner-urgent">Holiday dates fill up fast!</p>
           <p class="banner-extra">Christmas &amp; New Year's orders are open too.</p>
@@ -918,6 +926,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1117h"></script>
+  <script src="script.js?v=1117i"></script>
 </body>
 </html>
