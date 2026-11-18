@@ -813,6 +813,88 @@ a[href^="sms:"] { white-space: nowrap; }
   font-size: 0.95rem;
 }
 
+.remember-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+  margin: 0.15rem 0 0;
+  color: var(--cocoa-soft);
+  font-size: 0.95rem;
+}
+.remember-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem !important;
+  cursor: pointer;
+  margin: 0;
+}
+.remember-label span {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.remember-label input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--burgundy);
+  flex-shrink: 0;
+}
+.remember-clear {
+  background: none;
+  border: 0;
+  color: var(--burgundy);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 0.25rem 0.2rem;
+}
+.remember-clear:hover,
+.remember-clear:focus-visible { color: var(--pumpkin-deep); }
+
+.reorder-card {
+  background: var(--white);
+  border: 1.5px solid var(--gold);
+  border-radius: 1.2rem;
+  padding: 1.15rem 1.25rem 1.25rem;
+  margin: 0 0 1.5rem;
+  box-shadow: var(--shadow);
+}
+.reorder-card[hidden] { display: none; }
+.reorder-card h3 {
+  font-family: "Playfair Display", serif;
+  color: var(--burgundy);
+  margin: 0 0 0.35rem;
+  font-size: 1.45rem;
+}
+.reorder-intro {
+  margin: 0 0 0.7rem;
+  color: var(--cocoa-soft);
+  font-size: 0.98rem;
+}
+.reorder-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+.reorder-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+.reorder-list li:last-child { border-bottom: 0; }
+.reorder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 
 .btn-ig-order {
   background: linear-gradient(45deg, #f9ce34, #ee2a7b 50%, #6228d7);
@@ -1235,8 +1317,8 @@ html.promo-hidden .promo-banner { display: none; }
   .pills .pineapple { grid-column: 1 / -1; }
   .menu-grid .card-head { flex-direction: column; }
   .menu-grid .prices { text-align: left; }
-  .hero-actions, .order-actions { flex-direction: column; }
-  .hero-actions .btn, .order-actions .btn { width: 100%; }
+  .hero-actions, .order-actions, .reorder-actions { flex-direction: column; }
+  .hero-actions .btn, .order-actions .btn, .reorder-actions .btn { width: 100%; }
   .flyer figcaption { flex-direction: column; align-items: flex-start; }
   .cake-list li { align-items: flex-start; flex-wrap: wrap; }
   .split .card-head { flex-direction: column; align-items: flex-start; gap: 0.35rem; }

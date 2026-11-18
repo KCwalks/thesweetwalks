@@ -185,7 +185,16 @@
     return {
       text: parts.join(" "),
       total: lineTotal,
-      priced: priced
+      priced: priced,
+      kind: type,
+      fields: {
+        flavor: flavor,
+        nuts: nuts,
+        shape: shape,
+        type: typ,
+        qty: String(qty),
+        unit: unit
+      }
     };
   }
 
@@ -426,6 +435,7 @@
     e.preventDefault();
     var body = prepareOrder();
     if (!body) return;
+    saveRememberedOrder();
     if (window.swEmailChooser) window.swEmailChooser("Order request", body);
   });
 
@@ -435,6 +445,7 @@
       if (typeof form.reportValidity === "function" && !form.reportValidity()) return;
       var body = prepareOrder();
       if (!body) return;
+      saveRememberedOrder();
       copyText(body).then(function (ok) {
         showIgNotice(ok, body);
         window.open("https://ig.me/m/sweetwalks_bake", "_blank", "noopener,noreferrer");
@@ -528,6 +539,226 @@
     var initV = initSel && initSel.value;
     deliveryInit.hidden = !(initV === "Delivery" || initV === "Meet up");
     deliveryInit.querySelector("textarea").required = !deliveryInit.hidden;
+  }
+
+  var SAVED_KEY = "sweetwalks-saved";
+  var REORDER_DISMISS = "sw-reorder-dismissed";
+
+  function readSaved() {
+    try {
+      var raw = localStorage.getItem(SAVED_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      return data && typeof data === "object" ? data : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function writeSaved(data) {
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(data)); } catch (err) {}
+  }
+
+  function clearSaved() {
+    try { localStorage.removeItem(SAVED_KEY); } catch (err) {}
+    try { sessionStorage.removeItem(REORDER_DISMISS); } catch (err) {}
+  }
+
+  function valOf(name) {
+    return (form.elements[name] && form.elements[name].value || "").trim();
+  }
+
+  function collectContact() {
+    var fulfillment = (form.querySelector('input[name="fulfillment"]:checked') || {}).value || "";
+    return {
+      name: valOf("name"),
+      phone: valOf("phone"),
+      email: valOf("email"),
+      fulfillment: fulfillment,
+      deliveryArea: valOf("delivery-area")
+    };
+  }
+
+  function applyContact(contact) {
+    if (!contact) return;
+    function setVal(name, value) {
+      if (!value || !form.elements[name]) return;
+      form.elements[name].value = value;
+    }
+    setVal("name", contact.name);
+    setVal("phone", contact.phone);
+    setVal("email", contact.email);
+    if (contact.fulfillment) {
+      form.querySelectorAll('input[name="fulfillment"]').forEach(function (radio) {
+        radio.checked = radio.value === contact.fulfillment;
+      });
+      var checked = form.querySelector('input[name="fulfillment"]:checked');
+      if (checked) checked.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    setVal("delivery-area", contact.deliveryArea);
+  }
+
+  function clearContactFields() {
+    ["name", "phone", "email", "delivery-area"].forEach(function (name) {
+      if (form.elements[name]) form.elements[name].value = "";
+    });
+    var pickup = form.querySelector('input[name="fulfillment"][value="Pickup in Sacramento"]');
+    if (pickup) {
+      pickup.checked = true;
+      pickup.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
+  function lastOrderFrom(data) {
+    return data && data.lastOrder && typeof data.lastOrder === "object" ? data.lastOrder : null;
+  }
+
+  function hasLastOrder(data) {
+    var last = lastOrderFrom(data);
+    if (!last) return false;
+    var items = last.items || [];
+    return items.length > 0 || !!(last.custom && String(last.custom).trim());
+  }
+
+  function updateClearLink() {
+    var link = form.querySelector("[data-clear-saved]");
+    if (!link) return;
+    var data = readSaved();
+    var show = !!(data && (data.contact || hasLastOrder(data)));
+    link.hidden = !show;
+  }
+
+  var reorderCard = document.querySelector("[data-reorder-card]");
+
+  function hideReorderCard() {
+    if (reorderCard) reorderCard.hidden = true;
+  }
+
+  function renderReorderCard(data) {
+    if (!reorderCard || !hasLastOrder(data)) {
+      hideReorderCard();
+      return;
+    }
+    var dismissed = false;
+    try { dismissed = sessionStorage.getItem(REORDER_DISMISS) === "1"; } catch (err) {}
+    if (dismissed) {
+      hideReorderCard();
+      return;
+    }
+    var list = reorderCard.querySelector("[data-reorder-list]");
+    var last = lastOrderFrom(data);
+    list.innerHTML = "";
+    (last.items || []).forEach(function (item) {
+      if (!item || !item.text) return;
+      var li = document.createElement("li");
+      li.textContent = item.text;
+      list.appendChild(li);
+    });
+    if (last.custom && String(last.custom).trim()) {
+      var customLi = document.createElement("li");
+      customLi.textContent = "Custom request: " + String(last.custom).trim();
+      list.appendChild(customLi);
+    }
+    reorderCard.hidden = list.children.length === 0;
+  }
+
+  function setRowField(row, name, value) {
+    if (value == null || value === "") return;
+    var el = row.querySelector('[data-field="' + name + '"]');
+    if (!el) return;
+    el.value = String(value);
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function restoreCartItem(saved) {
+    if (!saved || !saved.kind) return false;
+    var fs = form.querySelector('fieldset[data-repeat="' + saved.kind + '"]');
+    if (!fs) return false;
+    var row = fs.querySelector(".order-row");
+    if (!row) return false;
+    resetRow(row);
+    var fields = saved.fields || {};
+    setRowField(row, "type", fields.type);
+    setRowField(row, "shape", fields.shape);
+    setRowField(row, "flavor", fields.flavor);
+    setRowField(row, "nuts", fields.nuts);
+    setRowField(row, "unit", fields.unit);
+    setRowField(row, "qty", fields.qty);
+    updateRow(row);
+    return !!addRowToCart(row);
+  }
+
+  function saveRememberedOrder() {
+    var box = form.elements["remember-info"];
+    if (box && !box.checked) {
+      clearSaved();
+      hideReorderCard();
+      updateClearLink();
+      return;
+    }
+    var items = cart.map(function (item) {
+      return {
+        kind: item.kind,
+        text: item.text,
+        total: item.total,
+        priced: item.priced,
+        fields: item.fields || {}
+      };
+    });
+    writeSaved({
+      contact: collectContact(),
+      lastOrder: {
+        items: items,
+        custom: valOf("custom")
+      }
+    });
+    updateClearLink();
+  }
+
+  var saved = readSaved();
+  if (saved && saved.contact) applyContact(saved.contact);
+  renderReorderCard(saved);
+  updateClearLink();
+
+  var clearBtn = form.querySelector("[data-clear-saved]");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", function () {
+      clearSaved();
+      clearContactFields();
+      hideReorderCard();
+      updateClearLink();
+    });
+  }
+
+  if (reorderCard) {
+    var againBtn = reorderCard.querySelector("[data-reorder-again]");
+    var newBtn = reorderCard.querySelector("[data-reorder-new]");
+    if (againBtn) {
+      againBtn.addEventListener("click", function () {
+        var data = readSaved();
+        if (!hasLastOrder(data)) return;
+        cart = [];
+        var last = lastOrderFrom(data);
+        (last.items || []).forEach(restoreCartItem);
+        if (form.elements.custom) form.elements.custom.value = last.custom || "";
+        updateEstimate();
+        var cartBox = document.getElementById("estimate");
+        if (cartBox) {
+          cartBox.classList.remove("order-flash");
+          void cartBox.offsetWidth;
+          cartBox.classList.add("order-flash");
+          cartBox.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+    if (newBtn) {
+      newBtn.addEventListener("click", function () {
+        try { sessionStorage.setItem(REORDER_DISMISS, "1"); } catch (err) {}
+        cart = [];
+        updateEstimate();
+        hideReorderCard();
+      });
+    }
   }
 })();
 
@@ -658,5 +889,15 @@
   });
   window.addEventListener("resize", function () {
     if (window.matchMedia("(min-width: 1100px)").matches) setOpen(false);
+  });
+})();
+
+
+// Register the service worker so Android Chrome can offer "Install app".
+// Network-first in sw.js, so online visitors always get the current pages.
+(function () {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/sw.js").catch(function () {});
   });
 })();
