@@ -242,25 +242,23 @@
     checkMinimum();
   }
 
-  // Delivery and meetup orders need at least a dozen; single cookies are pickup only.
-  // Friendly heads-up only, it never blocks sending.
+  // Delivery orders need a $25 minimum (menu prices, delivery fee not counted).
+  // Single cookies are pickup only. Friendly heads-up only, it never blocks sending.
+  var DELIVERY_MIN = 25;
   function checkMinimum() {
     var note = form.querySelector("[data-min-note]");
     if (!note) return;
     var selected = form.querySelector('input[name="fulfillment"]:checked');
     var v = selected && selected.value;
     var show = false;
-    if ((v === "Delivery" || v === "Meet up") && cart.length) {
-      var count = 0;
-      var wholeItems = false;
+    if (v === "Delivery" && cart.length) {
+      var subtotal = 0;
+      var hasUnpriced = false;
       cart.forEach(function (item) {
-        var f = item.fields || {};
-        var q = parseInt(f.qty, 10) || 0;
-        var countable = item.kind === "cookie" || item.kind === "cupcake" || (item.kind === "other" && f.type === "Brownies");
-        if (countable) count += f.unit === "dozen" ? q * 12 : q;
-        else wholeItems = true;
+        if (item.priced && item.total != null) subtotal += item.total;
+        else hasUnpriced = true;
       });
-      show = !wholeItems && count > 0 && count < 12;
+      show = !hasUnpriced && subtotal < DELIVERY_MIN;
     }
     note.hidden = !show;
   }
@@ -330,7 +328,6 @@
     lines.push("");
     lines.push("Fulfillment: " + fulfillment);
     if (fulfillment === "Delivery" && area) lines.push("Delivery address: " + area);
-    if (fulfillment === "Meet up") lines.push("Meetup spot: 2801 Arden Way, Sacramento");
     function val(n) { return (form.elements[n] && form.elements[n].value || "").trim(); }
     lines.push("");
     lines.push("Customer information:");
@@ -589,6 +586,12 @@
   }
 
   var SAVED_KEY = "sweetwalks-saved";
+  var PICKUP_VALUE = "Pickup at 2801 Arden Way, Sacramento";
+  // Older saves used "Pickup in Sacramento" or "Meet up"; both are now pickup at Arden Way.
+  function normalizeFulfillment(v) {
+    if (v === "Pickup in Sacramento" || v === "Meet up") return PICKUP_VALUE;
+    return v;
+  }
   var REORDER_DISMISS = "sw-reorder-dismissed";
 
   function readSaved() {
@@ -598,7 +601,13 @@
       var data = JSON.parse(raw);
       if (!data || typeof data !== "object") return null;
       // Older saves may carry fields the form no longer has (payment method, free-text time).
-      if (data.contact && typeof data.contact === "object") delete data.contact.payment;
+      if (data.contact && typeof data.contact === "object") {
+        delete data.contact.payment;
+        if (data.contact.fulfillment) {
+          data.contact.fulfillment = normalizeFulfillment(data.contact.fulfillment);
+          if (data.contact.fulfillment !== "Delivery") data.contact.deliveryArea = "";
+        }
+      }
       if (data.lastOrder && typeof data.lastOrder === "object") {
         delete data.lastOrder.payment;
         delete data.lastOrder.timeNeeded;
@@ -656,7 +665,7 @@
     ["name", "phone", "email", "delivery-area"].forEach(function (name) {
       if (form.elements[name]) form.elements[name].value = "";
     });
-    var pickup = form.querySelector('input[name="fulfillment"][value="Pickup in Sacramento"]');
+    var pickup = form.querySelector('input[name="fulfillment"][value="' + PICKUP_VALUE + '"]');
     if (pickup) {
       pickup.checked = true;
       pickup.dispatchEvent(new Event("change", { bubbles: true }));
