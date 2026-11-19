@@ -306,7 +306,7 @@
     lines.push("");
     lines.push("Fulfillment: " + fulfillment);
     if (fulfillment === "Delivery" && area) lines.push("Delivery address: " + area);
-    if (fulfillment === "Meet up" && area) lines.push("Meetup spot: " + area);
+    if (fulfillment === "Meet up") lines.push("Meetup spot: 2801 Arden Way, Sacramento");
     function val(n) { return (form.elements[n] && form.elements[n].value || "").trim(); }
     lines.push("");
     lines.push("Customer information:");
@@ -314,8 +314,7 @@
     lines.push("Phone: " + val("phone"));
     if (val("email")) lines.push("Email: " + val("email"));
     lines.push("Date needed: " + val("date-needed"));
-    if (val("time-needed")) lines.push("Preferred time: " + val("time-needed"));
-    lines.push("Payment method: " + val("payment"));
+    lines.push("Time slot: " + val("time-slot"));
     var notes = (form.elements.notes && form.elements.notes.value || "").trim();
     if (notes) {
       lines.push("");
@@ -351,17 +350,8 @@
     if (delivery) {
       var selected = form.querySelector('input[name="fulfillment"]:checked');
       var v = selected && selected.value;
-      delivery.hidden = !(v === "Delivery" || v === "Meet up");
+      delivery.hidden = v !== "Delivery";
       delivery.querySelector("textarea").required = !delivery.hidden;
-      var lab = delivery.querySelector("[data-delivery-label]");
-      var box = delivery.querySelector("textarea");
-      if (v === "Meet up") {
-        lab.textContent = "Where would you like to meet?";
-        box.placeholder = "A place, cross streets, or a city";
-      } else {
-        lab.textContent = "Delivery address";
-        box.placeholder = "Street address, city, and ZIP";
-      }
     }
     updateEstimate();
   });
@@ -431,11 +421,22 @@
     }
   }
 
+  function showNextSteps() {
+    var box = form.querySelector("[data-next-steps]");
+    if (!box) return;
+    var txt = box.querySelector("[data-next-steps-text]");
+    if (txt) txt.textContent = "Once you send your order request, we'll text you within 24 hours to confirm your total and deposit.";
+    box.classList.remove("is-sent");
+    void box.offsetWidth;
+    box.classList.add("is-sent");
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var body = prepareOrder();
     if (!body) return;
     saveRememberedOrder();
+    showNextSteps();
     if (window.swEmailChooser) window.swEmailChooser("Order request", body);
   });
 
@@ -446,6 +447,7 @@
       var body = prepareOrder();
       if (!body) return;
       saveRememberedOrder();
+      showNextSteps();
       copyText(body).then(function (ok) {
         showIgNotice(ok, body);
         window.open("https://ig.me/m/sweetwalks_bake", "_blank", "noopener,noreferrer");
@@ -558,7 +560,7 @@
   if (deliveryInit) {
     var initSel = form.querySelector('input[name="fulfillment"]:checked');
     var initV = initSel && initSel.value;
-    deliveryInit.hidden = !(initV === "Delivery" || initV === "Meet up");
+    deliveryInit.hidden = initV !== "Delivery";
     deliveryInit.querySelector("textarea").required = !deliveryInit.hidden;
   }
 
@@ -570,7 +572,14 @@
       var raw = localStorage.getItem(SAVED_KEY);
       if (!raw) return null;
       var data = JSON.parse(raw);
-      return data && typeof data === "object" ? data : null;
+      if (!data || typeof data !== "object") return null;
+      // Older saves may carry fields the form no longer has (payment method, free-text time).
+      if (data.contact && typeof data.contact === "object") delete data.contact.payment;
+      if (data.lastOrder && typeof data.lastOrder === "object") {
+        delete data.lastOrder.payment;
+        delete data.lastOrder.timeNeeded;
+      }
+      return data;
     } catch (err) {
       return null;
     }
@@ -680,6 +689,11 @@
       customLi.textContent = "Custom request: " + String(last.custom).trim();
       list.appendChild(customLi);
     }
+    if (last.timeSlot && list.children.length) {
+      var slotLi = document.createElement("li");
+      slotLi.textContent = "Time slot: " + last.timeSlot;
+      list.appendChild(slotLi);
+    }
     reorderCard.hidden = list.children.length === 0;
   }
 
@@ -730,7 +744,8 @@
       contact: collectContact(),
       lastOrder: {
         items: items,
-        custom: valOf("custom")
+        custom: valOf("custom"),
+        timeSlot: valOf("time-slot")
       }
     });
     updateClearLink();
@@ -762,6 +777,11 @@
         var last = lastOrderFrom(data);
         (last.items || []).forEach(restoreCartItem);
         if (form.elements.custom) form.elements.custom.value = last.custom || "";
+        var slotSel = form.elements["time-slot"];
+        if (slotSel && last.timeSlot) {
+          var okSlot = Array.prototype.some.call(slotSel.options, function (o) { return o.value === last.timeSlot; });
+          if (okSlot) slotSel.value = last.timeSlot;
+        }
         updateEstimate();
         var cartBox = document.getElementById("estimate");
         if (cartBox) {

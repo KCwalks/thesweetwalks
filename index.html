@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1117i">
+  <link rel="stylesheet" href="styles.css?v=1119b">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -94,6 +94,14 @@
       ],
       "sameAs": [
         "https://www.instagram.com/sweetwalks_bake/"
+      ],
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+          "opens": "08:00",
+          "closes": "20:00"
+        }
       ]
     },
     {
@@ -105,7 +113,7 @@
           "name": "Do you deliver?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. We are local in Sacramento and deliver to Rocklin, Roseville, Placer County, the Bay Area, and beyond. Pickup in Sacramento and meetups are available too. We will provide a 3-hour delivery window based on the time slot you've chosen when submitting an order."
+            "text": "Yes. We are local in Sacramento and deliver to Rocklin, Roseville, Placer County, the Bay Area, and beyond. Pickup in Sacramento and meetups are available too. Meetups are at 2801 Arden Way, Sacramento, at the pickup date and time you schedule."
           }
         },
         {
@@ -131,6 +139,38 @@
             "@type": "Answer",
             "text": "Yes. You can ask for any flavor, design, shape, or change on any item on our menu, including custom cakes. Customization pricing will be discussed when you order."
           }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a delivery fee?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Any delivery fee is confirmed when we confirm your order."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do your treats contain allergens?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Our kitchen handles peanuts, tree nuts, wheat, eggs, and dairy. Products may contain or come in contact with these allergens."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What if I need to cancel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The 50% deposit that books your order is non-refundable. Cancel 7 or more days ahead for a 60-day credit. Under 72 hours, the full total is due."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are your hours?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We're open 8 AM to 8 PM, 7 days a week. We reply to orders within 24 hours."
+          }
         }
       ]
     }
@@ -153,7 +193,7 @@
   <div class="promo-banner" data-promo-banner data-thanks-cutoff-banner>
     <div class="wrap promo-inner">
       <p class="promo-cutoff" data-thanks-cutoff>Last day for Thanksgiving orders is Sunday 11/22!</p>
-      <p>Thursday, Nov 26. Holiday dates fill up fast.</p>
+      <p>Thanksgiving is Thursday, Nov 26.</p>
       <a href="#order">Order now</a>
       <button type="button" class="promo-dismiss" data-promo-dismiss aria-label="Dismiss holiday announcement">&times;</button>
     </div>
@@ -175,16 +215,11 @@
         <span class="nav-toggle-bars" aria-hidden="true"></span>
       </button>
       <nav id="site-nav" aria-label="Primary">
-        <a href="#favorites">Holiday</a>
         <a href="#menu">Menu</a>
-        <a href="#about">About</a>
+        <a href="#order">Order</a>
         <a href="#delivery">Delivery</a>
         <a href="#faq">FAQ</a>
-        <a href="#reviews">Reviews</a>
-        <a href="#order">Order</a>
-        <a href="#pay">Pay</a>
         <a href="#contact">Contact</a>
-        <a class="nav-order" href="#order">Order Now</a>
       </nav>
     </div>
   </header>
@@ -218,15 +253,17 @@
           <a class="btn btn-ghost" href="#menu">See the menu</a>
         </div>
 
-        <aside class="holiday-banner" aria-label="Thanksgiving pre-orders">
+        <aside class="holiday-banner" aria-labelledby="holiday-deadlines">
           <svg class="banner-deco left" viewBox="0 0 24 28" aria-hidden="true"><path fill="currentColor" d="M12 1c.4 3-.3 5-2 6.8C6.6 10.8 2.2 9.8 1.4 12.8c2.3.6 3.6 1.4 3.6 3.1C3.2 16.3 1.5 17 0 19c2.7.3 4.6.2 6.4-.8-.4 1.9-1.6 3.4-3.1 5 2.5-.2 4.1-1 5.4-2.3.3 2.1.1 4-.6 5.8 1.3-1 1.9-2.1 1.9-3.8 0 1.7.7 2.8 1.9 3.8-.7-1.8-.9-3.7-.6-5.8 1.3 1.3 2.9 2.1 5.4 2.3-1.5-1.6-2.7-3.1-3.1-5 1.8 1 3.7 1.1 6.4.8-1.5-2-3.2-2.7-5-3.1 0-1.7 1.3-2.5 3.6-3.1C21.8 9.8 17.4 10.8 14 7.8 12.3 6 11.6 4 12 1z"/></svg>
           <svg class="banner-deco right" viewBox="0 0 24 28" aria-hidden="true"><path fill="currentColor" d="M12 1c.4 3-.3 5-2 6.8C6.6 10.8 2.2 9.8 1.4 12.8c2.3.6 3.6 1.4 3.6 3.1C3.2 16.3 1.5 17 0 19c2.7.3 4.6.2 6.4-.8-.4 1.9-1.6 3.4-3.1 5 2.5-.2 4.1-1 5.4-2.3.3 2.1.1 4-.6 5.8 1.3-1 1.9-2.1 1.9-3.8 0 1.7.7 2.8 1.9 3.8-.7-1.8-.9-3.7-.6-5.8 1.3 1.3 2.9 2.1 5.4 2.3-1.5-1.6-2.7-3.1-3.1-5 1.8 1 3.7 1.1 6.4.8-1.5-2-3.2-2.7-5-3.1 0-1.7 1.3-2.5 3.6-3.1C21.8 9.8 17.4 10.8 14 7.8 12.3 6 11.6 4 12 1z"/></svg>
           <p class="banner-kicker">Now taking holiday orders</p>
-          <h2>Thanksgiving Pre-Orders Are Open</h2>
-          <p class="banner-cutoff" data-thanks-cutoff>Last day for Thanksgiving orders is Sunday 11/22!</p>
-          <p>Thanksgiving is Thursday, Nov 26. Reserve your cakes, pies, and cookie trays early.</p>
-          <p class="banner-urgent">Holiday dates fill up fast!</p>
-          <p class="banner-extra">Christmas &amp; New Year's orders are open too.</p>
+          <h2 id="holiday-deadlines">Holiday Order Deadlines</h2>
+          <ul class="deadline-list">
+            <li data-thanks-cutoff><span>Thanksgiving</span> <strong>Sunday 11/22</strong></li>
+            <li><span>Christmas</span> <strong>Christmas Eve, 12/24/2026</strong></li>
+            <li><span>New Year's</span> <strong>12/30/2026</strong></li>
+          </ul>
+          <p class="banner-extra">Reserve your cakes, pies, and cookie trays early. Holiday dates fill up fast!</p>
           <div class="hero-actions">
             <a class="btn btn-pumpkin" href="#order">Build your order</a>
             <a class="btn btn-ghost" href="#favorites">See holiday favorites</a>
@@ -268,10 +305,9 @@
           </article>
           <article class="fav-card">
             <div>
-              <h3>Cookie or Brownie Dozens</h3>
+              <h3>Cookies $25/dozen · Brownies $30/dozen</h3>
               <p>Perfect for gifting, dessert trays, and office parties</p>
             </div>
-            <span class="price-tag">$25 / $30</span>
             <a class="btn btn-sm order-item" href="#order" data-order="cookie" data-set="unit=dozen">Order dozens</a>
           </article>
         </div>
@@ -284,6 +320,7 @@
           <h2>Holiday Menu</h2>
           <p>Same prices for every cookie and cupcake flavor. Custom work is priced when you order.</p>
         </header>
+        <p class="allergen-note"><strong>Allergen note:</strong> Our kitchen handles peanuts, tree nuts, wheat, eggs, and dairy. Products may contain or come in contact with these allergens.</p>
 
         <div class="menu-grid">
           <article class="card">
@@ -440,57 +477,13 @@
       </div>
     </section>
 
-    <section class="section testimonials" id="reviews">
-      <div class="wrap">
-        <header class="section-head">
-          <h2>What customers are saying</h2>
-          <p>Have you tried SweetWalks? Share your experience and help others find us.</p>
-        </header>
-        <div class="testimonials-grid">
-          <article class="testimonial-card">
-            <p class="testimonial-stars" aria-label="Rated 5 out of 5 for taste, freshness, and presentation">★★★★★</p>
-            <p class="testimonial-highlight">5/5 taste, freshness, and presentation</p>
-            <p class="testimonial-meta">Cookie sample, by delivery. Price was fair. 10 out of 10 likely to order again.</p>
-            <p class="testimonial-attr">Anonymous customer survey, Nov 2026</p>
-          </article>
-          <!--
-            To add a real customer quote later, copy the card below, uncomment it,
-            and fill in only a real comment, name or initials, and rating from
-            an actual response. Never invent a quote, name, or star rating.
-          <article class="testimonial-card">
-            <p class="testimonial-stars" aria-label="Rated X out of 5">★★★★★</p>
-            <blockquote>
-              <p>Real customer quote goes here.</p>
-            </blockquote>
-            <p class="testimonial-attr">First name or initials, Month Year</p>
-          </article>
-          -->
-        </div>
-        <div class="testimonials-cta">
-          <a class="btn btn-pumpkin" href="https://forms.gle/7Ls2SYGRbaCGfgkp8" rel="noopener noreferrer" target="_blank">Take our quick survey</a>
-          <p class="testimonials-note">Tried our treats? Tell us how we did. It takes about 2 minutes and you can stay anonymous.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section about" id="about">
-      <div class="wrap">
-        <header class="section-head">
-          <h2>About SweetWalks</h2>
-        </header>
-        <div class="about-card">
-          <p>SweetWalks by the Walkers is a family bakery in Sacramento, CA, run by Chance and Kalia Walker. We bake cookies, cupcakes, cakes, brownies, pies, and more with love, made to order and made with family.</p>
-          <!-- Chance: add your story here when you are ready. A few sentences about how SweetWalks started, or what baking means to your family, is perfect. -->
-        </div>
-      </div>
-    </section>
-
     <section class="section alt delivery" id="delivery">
       <div class="wrap">
         <header class="section-head">
-          <h2>Delivery areas</h2>
-          <p>We bake in Sacramento and offer pickup in Sacramento, plus delivery and meetups. We do not ship at this time.</p>
+          <h2>Pickup &amp; Delivery</h2>
+          <p>We bake in Sacramento and offer pickup in Sacramento, delivery, and meetups. We do not ship at this time.</p>
         </header>
+        <h3 class="subhead delivery-subhead">We deliver to</h3>
         <ul class="area-grid">
           <li>Sacramento</li>
           <li>Rocklin</li>
@@ -498,8 +491,12 @@
           <li>Placer County</li>
           <li>Bay Area</li>
         </ul>
-        <p class="note">We also deliver beyond these areas. You can pick a spot to meet up. Text us at <a href="sms:+19167209564">(916) 720-9564</a> and we will confirm pickup, delivery, or a meetup when we take your order.</p>
-        <p class="note">We will provide a 3-hour delivery window based on the time slot you've chosen when submitting an order.</p>
+        <ul class="policy delivery-policy">
+          <li>We also deliver beyond these areas. Text us at <a href="sms:+19167209564">(916) 720-9564</a> to ask.</li>
+          <li>We will provide a 3-hour delivery window based on the time slot you've chosen when submitting an order.</li>
+          <li>Meetups are at 2801 Arden Way, Sacramento, at the pickup date and time you schedule.</li>
+          <li>Any delivery fee is confirmed when we confirm your order.</li>
+        </ul>
       </div>
     </section>
 
@@ -511,7 +508,7 @@
         <div class="faq-list">
           <details class="faq-item">
             <summary>Do you deliver?</summary>
-            <p>Yes. We are local in Sacramento and deliver to Rocklin, Roseville, Placer County, the Bay Area, and beyond. Pickup in Sacramento and meetups are available too. We will provide a 3-hour delivery window based on the time slot you've chosen when submitting an order.</p>
+            <p>Yes. We are local in Sacramento and deliver to Rocklin, Roseville, Placer County, the Bay Area, and beyond. Pickup in Sacramento and meetups are available too. Meetups are at 2801 Arden Way, Sacramento, at the pickup date and time you schedule. <a href="#delivery">See Pickup &amp; Delivery</a>.</p>
           </details>
           <details class="faq-item">
             <summary>Do you ship?</summary>
@@ -525,6 +522,22 @@
             <summary>Do you make custom cakes?</summary>
             <p>Yes. You can ask for any flavor, design, shape, or change on any item on our menu, including custom cakes. Customization pricing will be discussed when you order.</p>
           </details>
+          <details class="faq-item">
+            <summary>Is there a delivery fee?</summary>
+            <p>Any delivery fee is confirmed when we confirm your order.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Do your treats contain allergens?</summary>
+            <p>Our kitchen handles peanuts, tree nuts, wheat, eggs, and dairy. Products may contain or come in contact with these allergens.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What if I need to cancel?</summary>
+            <p>The 50% deposit that books your order is non-refundable. Cancel 7 or more days ahead for a 60-day credit. Under 72 hours, the full total is due. See our <a href="#policy">Order Policy</a>.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What are your hours?</summary>
+            <p>We're open 8 AM to 8 PM, 7 days a week. We reply to orders within 24 hours.</p>
+          </details>
         </div>
       </div>
     </section>
@@ -533,7 +546,7 @@
       <div class="wrap">
         <header class="section-head">
           <h2>Build your order</h2>
-          <p>Thanksgiving is Thursday, Nov 26. Holiday dates fill up fast. Choose your items below, then send us an order request by email. We will confirm flavors, timing, and payment when we write back.</p>
+          <p>Choose your items below, then send us an order request by email or Instagram. We will confirm flavors, timing, and payment when we write back.</p>
         </header>
 
         <aside class="reorder-card" data-reorder-card hidden>
@@ -545,6 +558,8 @@
             <button type="button" class="btn btn-ghost" data-reorder-new>Start a new order</button>
           </div>
         </aside>
+
+        <p class="allergen-note"><strong>Allergen note:</strong> Our kitchen handles peanuts, tree nuts, wheat, eggs, and dairy. Products may contain or come in contact with these allergens.</p>
 
         <form id="order-form" class="order-form" action="mailto:KCwalks@thesweetwalks.com?subject=Order%20request" method="post" enctype="text/plain">
           <fieldset class="card" data-repeat="cookie">
@@ -749,32 +764,20 @@
               <input type="date" name="date-needed" required>
             </label>
             <label class="full">
-              <span>Preferred time <span class="hint">(optional)</span></span>
-              <input type="text" name="time-needed" placeholder="Morning, afternoon, or a specific time">
-              <span class="hint">We will provide a 3-hour delivery window based on the time slot you've chosen when submitting an order.</span>
-            </label>
-          </fieldset>
-
-          <fieldset class="card payment">
-            <legend>Payment</legend>
-            <p class="fieldset-note">We accept Zelle, Cash App, Venmo, PayPal, Chime, and cash. Cash is accepted only after the delivery fee and deposit are paid, unless otherwise negotiated. We'll confirm your total when we reply. Payment tags and QR codes are in <a href="#pay">How to Pay</a>.</p>
-            <label class="full">
-              <span>How would you like to pay? <span class="req">*</span></span>
-              <select name="payment" required>
-                <option value="">Choose one</option>
-                <option value="Zelle">Zelle</option>
-                <option value="Cash App">Cash App</option>
-                <option value="Venmo">Venmo</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Chime">Chime</option>
-                <option value="Cash (after delivery fee and deposit are paid)">Cash (after delivery fee and deposit are paid)</option>
+              <span>Time slot <span class="req">*</span></span>
+              <select name="time-slot" required>
+                <option value="">Choose a time slot</option>
+                <option value="8–11 AM">8–11 AM</option>
+                <option value="11 AM–2 PM">11 AM–2 PM</option>
+                <option value="2–5 PM">2–5 PM</option>
+                <option value="5–8 PM">5–8 PM</option>
               </select>
             </label>
           </fieldset>
 
           <fieldset class="card fulfillment">
             <legend>Pickup or delivery</legend>
-            <p class="fieldset-note">Local in Sacramento. We deliver to Rocklin, Roseville, Placer County, the Bay Area, and beyond. You can also pick a spot to meet up. We will provide a 3-hour delivery window based on the time slot you've chosen when submitting an order.</p>
+            <p class="fieldset-note">Pickup in Sacramento, delivery, or a meetup at 2801 Arden Way, Sacramento. <a href="#delivery">See Pickup &amp; Delivery</a>.</p>
             <div class="choice-row">
               <label class="choice">
                 <input type="radio" name="fulfillment" value="Pickup in Sacramento" checked>
@@ -795,7 +798,7 @@
             </label>
             <label class="full">
               <span>Anything else we should know?</span>
-              <textarea name="notes" rows="3" placeholder="Allergies, a celebration, gate codes, or other details. Thanksgiving is Thursday, Nov 26."></textarea>
+              <textarea name="notes" rows="3" placeholder="Allergies, a celebration, gate codes, or other details."></textarea>
             </label>
           </fieldset>
 
@@ -814,6 +817,7 @@
               Order on Instagram
             </button>
           </div>
+          <p class="next-steps" data-next-steps aria-live="polite"><strong>What happens next:</strong> <span data-next-steps-text>After you send your order request, we'll text you within 24 hours to confirm your total and deposit.</span></p>
           <p class="remember-row">
             <label class="remember-label">
               <input type="checkbox" name="remember-info" checked>
@@ -829,8 +833,8 @@
     </section>
 
     <section class="section" id="policy">
-      <div class="wrap split">
-        <article class="card">
+      <div class="wrap">
+        <article class="card policy-card">
           <div class="card-head">
             <h2>How to order</h2>
             <p class="ig-note"><a href="https://ig.me/m/sweetwalks_bake" rel="noopener noreferrer" target="_blank">@sweetwalks_bake</a><br><span class="hint">DM us to order</span></p>
@@ -842,12 +846,8 @@
             <li>Orders under $50 or needed within 72 hours are paid in full</li>
             <li>Balance due 48 hours before pickup or delivery</li>
             <li>Cancel 7+ days ahead for a 60-day credit; under 72 hours, full total due</li>
-            <li>Cash accepted only after the delivery fee and deposit are paid, unless otherwise negotiated</li>
+            <li>Cash accepted only after the deposit, and any delivery fee, are paid, unless otherwise negotiated. Any delivery fee is confirmed when we confirm your order.</li>
           </ul>
-        </article>
-        <article class="card mint" id="pickup">
-          <h2>Pickup &amp; Delivery</h2>
-          <p>Local in Sacramento. We deliver to Rocklin, Roseville, Placer County, the Bay Area, and beyond. You can also pick a spot to meet up. <a href="#delivery">See delivery areas</a>.</p>
         </article>
       </div>
     </section>
@@ -857,7 +857,7 @@
         <header class="section-head">
           <h2>How to Pay</h2>
           <p>Please wait until we confirm your order and total, then send your deposit or payment using one of the accounts below. Put your name and order date in the payment note.</p>
-          <p class="pay-cash"><strong>Cash:</strong> Cash is accepted only after the delivery fee and deposit are paid, unless otherwise negotiated.</p>
+          <p class="pay-cash"><strong>Paying cash?</strong> See the cash rule in our <a href="#policy">Order Policy</a>.</p>
         </header>
         <div class="pay-grid">
           <article class="pay-card">
@@ -897,6 +897,51 @@
       </div>
     </section>
 
+    <section class="section testimonials" id="reviews">
+      <div class="wrap">
+        <header class="section-head">
+          <h2>What customers are saying</h2>
+          <p>Have you tried SweetWalks? <a href="https://forms.gle/7Ls2SYGRbaCGfgkp8" rel="noopener noreferrer" target="_blank">Leave a review in our quick feedback survey</a> and help others find us.</p>
+        </header>
+        <div class="testimonials-grid">
+          <article class="testimonial-card">
+            <p class="testimonial-stars" aria-label="Rated 5 out of 5 for taste, freshness, and presentation">★★★★★</p>
+            <p class="testimonial-highlight">5/5 taste, freshness, and presentation</p>
+            <p class="testimonial-meta">Cookie sample, by delivery. Price was fair. 10 out of 10 likely to order again.</p>
+            <p class="testimonial-attr">Anonymous customer survey, Nov 2026</p>
+          </article>
+          <!--
+            To add a real customer quote later, copy the card below, uncomment it,
+            and fill in only a real comment, name or initials, and rating from
+            an actual response. Never invent a quote, name, or star rating.
+          <article class="testimonial-card">
+            <p class="testimonial-stars" aria-label="Rated X out of 5">★★★★★</p>
+            <blockquote>
+              <p>Real customer quote goes here.</p>
+            </blockquote>
+            <p class="testimonial-attr">First name or initials, Month Year</p>
+          </article>
+          -->
+        </div>
+        <div class="testimonials-cta">
+          <a class="btn btn-pumpkin" href="https://forms.gle/7Ls2SYGRbaCGfgkp8" rel="noopener noreferrer" target="_blank">Leave a review in our survey</a>
+          <p class="testimonials-note">Tried our treats? Tell us how we did. It takes about 2 minutes and you can stay anonymous.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section about" id="about">
+      <div class="wrap">
+        <header class="section-head">
+          <h2>About SweetWalks</h2>
+        </header>
+        <div class="about-card">
+          <p>SweetWalks by the Walkers is a family bakery in Sacramento, CA, run by Chance and Kalia Walker. We bake cookies, cupcakes, cakes, brownies, pies, and more with love, made to order and made with family.</p>
+          <!-- Chance: add your story here when you are ready. A few sentences about how SweetWalks started, or what baking means to your family, is perfect. -->
+        </div>
+      </div>
+    </section>
+
     <section class="section contact-section" id="contact">
       <div class="wrap">
         <header class="section-head">
@@ -909,14 +954,19 @@
               <dd><a href="mailto:KCwalks@thesweetwalks.com">KCwalks@thesweetwalks.com</a></dd>
             </div>
             <div>
-              <dt>Phone <span class="hint">Texts</span></dt>
+              <dt>Text us:</dt>
               <dd><a href="sms:+19167209564">(916) 720-9564</a></dd>
             </div>
             <div>
               <dt>Instagram</dt>
               <dd><a href="https://ig.me/m/sweetwalks_bake" rel="noopener noreferrer" target="_blank">@sweetwalks_bake</a></dd>
             </div>
+            <div>
+              <dt>Hours</dt>
+              <dd>8 AM to 8 PM, 7 days a week</dd>
+            </div>
           </dl>
+          <p class="reply-time">We reply to orders within 24 hours.</p>
           <div class="hero-actions">
             <a class="btn" href="mailto:KCwalks@thesweetwalks.com?subject=Order%20request">Email an order request</a>
             <a class="btn btn-ig-order" href="https://ig.me/m/sweetwalks_bake" rel="noopener noreferrer" target="_blank">
@@ -955,6 +1005,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1117i"></script>
+  <script src="script.js?v=1119b"></script>
 </body>
 </html>
