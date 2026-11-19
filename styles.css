@@ -1533,16 +1533,39 @@ body.nav-open .float-order { opacity: 0; transform: translateY(1rem); pointer-ev
 /* How to pay */
 .pay-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
 .pay-card {
-  background: #fffdf8; border: 1.5px solid var(--line); border-radius: 1.2rem;
-  padding: 1.1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  background: var(--white); border: 1.5px solid var(--line); border-radius: 1.2rem;
+  padding: 1.25rem 1.1rem 1.1rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+  box-shadow: var(--shadow);
 }
-.pay-card h3 { margin: 0; font-family: "Playfair Display", serif; font-size: 1.35rem; }
+.pay-card h3 { margin: 0; font-family: "Playfair Display", serif; font-size: 1.35rem; color: var(--ink); }
+.pay-business {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cocoa-soft);
+}
 .pay-handle { margin: 0; font-weight: 700; font-size: 1.1rem; color: var(--burgundy); word-break: break-all; }
 .pay-card .hint { margin: 0; }
-.pay-card img { width: 170px; max-width: 70%; height: auto; aspect-ratio: 1; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: pixelated; margin: 0.4rem 0; }
+.pay-card img {
+  width: 170px; max-width: 70%; height: auto; aspect-ratio: 1;
+  margin: 0.55rem 0 0.2rem;
+  background: #fff;
+  border-radius: 0.55rem;
+}
 .pay-link { font-weight: 700; color: var(--burgundy); display: inline-flex; align-items: center; min-height: 44px; }
+.pay-link:hover { color: var(--pumpkin-deep); }
 
-.pay-cash { max-width: 40rem; margin: 0.6rem auto 0; background: #fff4e6; border: 1.5px solid var(--pumpkin); border-radius: 0.9rem; padding: 0.6rem 0.9rem; color: var(--ink); }
+.pay-cash {
+  max-width: 40rem; margin: 0.6rem auto 0;
+  background: var(--pink-soft);
+  border: 1.5px solid var(--line);
+  border-radius: 0.9rem;
+  padding: 0.6rem 0.9rem;
+  color: var(--ink);
+}
 
 /* Email chooser */
 .email-chooser{position:fixed;top:0;right:0;bottom:0;left:0;inset:0;z-index:1000;background:rgba(58,36,24,.55);display:flex;align-items:center;justify-content:center;padding:1rem}
