@@ -1731,3 +1731,16 @@ html.thanks-cutoff-passed .deadline-list [data-thanks-cutoff] { display: none; }
 
 /* Contact hours and reply time */
 .reply-time { margin: 0.8rem 0 0; font-weight: 700; color: var(--cocoa); }
+
+/* Minimum order notes */
+.min-order-note { margin: 0.2rem 0 0.6rem; font-size: 0.92rem; font-weight: 700; color: var(--rose); }
+.min-order-alert {
+  margin: 0.6rem 0;
+  padding: 0.65rem 0.9rem;
+  background: #fff6e0;
+  border: 1.5px solid var(--butter);
+  border-radius: 0.85rem;
+  color: var(--ink);
+  line-height: 1.45;
+}
+.min-order-alert[hidden] { display: none; }

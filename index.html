@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1119c">
+  <link rel="stylesheet" href="styles.css?v=1119e">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -161,7 +161,15 @@
           "name": "What is your cancellation and refund policy?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The 50% deposit that books your order is non-refundable. Cancel 7 or more days ahead for a 60-day credit. Cancel 3 to 7 days ahead for a full refund of payments beyond the nonrefundable deposit. Under 72 hours, the full total is due. Cancellations the same day or during the scheduled delivery window get no refund."
+            "text": "A 50% deposit books your order. Cancel 7 or more days before your order date for a full refund, including the deposit. Cancel 3 to 6 days before for a refund of your payments, minus the deposit, which is nonrefundable at that point. Cancel 2 days or less before your order date, including the same day or during the delivery window, and there is no refund."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a minimum order?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Delivery and meetup orders need at least a dozen. Single cookies are pickup only."
           }
         },
         {
@@ -336,6 +344,7 @@
               <h3>Cookies</h3>
               <p class="prices"><strong>$2.50</strong> each<br><strong>$25</strong> per dozen</p>
             </div>
+            <p class="min-order-note">Single cookies are pickup only. Delivery and meetup orders need at least a dozen.</p>
             <ul class="flavor-list two-col">
               <li>Chocolate Chip <span class="hint nowrap">(with or without nuts)</span></li>
               <li>Snickerdoodle</li>
@@ -503,6 +512,7 @@
           <li>We also deliver beyond these areas. Text us at <a href="sms:+19167209564">(916) 720-9564</a> to ask.</li>
           <li>We will provide a 3-hour delivery window based on the time slot you've chosen when submitting an order.</li>
           <li>Meetups are at 2801 Arden Way, Sacramento, at the pickup date and time you schedule.</li>
+          <li>Delivery and meetup orders need at least a dozen. Single cookies are pickup only.</li>
           <li>Delivery fees are $5–$10 within Sacramento and $20–$40 for the Bay Area. Your exact fee is confirmed when we confirm your order.</li>
         </ul>
       </div>
@@ -540,7 +550,11 @@
           </details>
           <details class="faq-item">
             <summary>What is your cancellation and refund policy?</summary>
-            <p>The 50% deposit that books your order is non-refundable. Cancel 7 or more days ahead for a 60-day credit. Cancel 3 to 7 days ahead for a full refund of payments beyond the nonrefundable deposit. Under 72 hours, the full total is due. Cancellations the same day or during the scheduled delivery window get no refund. See our <a href="#policy">Order Policy</a>.</p>
+            <p>A 50% deposit books your order. Cancel 7 or more days before your order date for a full refund, including the deposit. Cancel 3 to 6 days before for a refund of your payments, minus the deposit, which is nonrefundable at that point. Cancel 2 days or less before your order date, including the same day or during the delivery window, and there is no refund. See our <a href="#policy">Order Policy</a>.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Is there a minimum order?</summary>
+            <p>Delivery and meetup orders need at least a dozen. Single cookies are pickup only.</p>
           </details>
           <details class="faq-item">
             <summary>How long do your treats stay fresh?</summary>
@@ -576,7 +590,7 @@
         <form id="order-form" class="order-form" action="mailto:KCwalks@thesweetwalks.com?subject=Order%20request" method="post" enctype="text/plain">
           <fieldset class="card" data-repeat="cookie">
             <legend>Cookies</legend>
-            <p class="fieldset-note">$2.50 each, or $25 per dozen. Same price for every flavor.</p>
+            <p class="fieldset-note">$2.50 each, or $25 per dozen. Same price for every flavor. Single cookies are pickup only.</p>
             <div class="rows" data-rows>
               <div class="order-row" data-item="cookie">
                 <label>
@@ -789,7 +803,7 @@
 
           <fieldset class="card fulfillment">
             <legend>Pickup or delivery</legend>
-            <p class="fieldset-note">Pickup in Sacramento, delivery, or a meetup at 2801 Arden Way, Sacramento. <a href="#delivery">See Pickup &amp; Delivery</a>.</p>
+            <p class="fieldset-note">Pickup in Sacramento, delivery, or a meetup at 2801 Arden Way, Sacramento. Delivery and meetup orders need at least a dozen. Single cookies are pickup only. <a href="#delivery">See Pickup &amp; Delivery</a>.</p>
             <div class="choice-row">
               <label class="choice">
                 <input type="radio" name="fulfillment" value="Pickup in Sacramento" checked>
@@ -804,6 +818,7 @@
                 <span>Meet up</span>
               </label>
             </div>
+            <p class="min-order-alert" data-min-note hidden role="status">Just a heads-up: delivery and meetup orders need at least a dozen, and single cookies are pickup only. Add a few more treats or choose pickup. You can still send your request and we'll sort it out with you.</p>
             <label class="full" data-delivery-area>
               <span><span data-delivery-label>Delivery address</span> <span class="req">*</span></span>
               <textarea name="delivery-area" rows="2" autocomplete="street-address" placeholder="Street address, city, and ZIP"></textarea>
@@ -854,13 +869,12 @@
           <p>Send an order request by email, text us at <a href="sms:+19167209564">(916) 720-9564</a>, or DM us on Instagram. We will confirm your items, pickup or delivery, and payment before baking.</p>
           <h3 class="subhead">Order Policy</h3>
           <ul class="policy">
-            <li>50% non-refundable deposit to book your order</li>
+            <li>50% deposit to book your order, refundable only if you cancel 7+ days ahead</li>
             <li>Orders under $50 or needed within 72 hours are paid in full</li>
             <li>Balance due 48 hours before pickup or delivery</li>
-            <li>Cancel 7+ days ahead for a 60-day credit</li>
-            <li>Cancel 3 to 7 days ahead for a full refund of payments beyond the nonrefundable deposit</li>
-            <li>Under 72 hours, full total due</li>
-            <li>No refund for cancellations the same day or during the scheduled delivery window</li>
+            <li>Cancel 7+ days before your order date for a full refund, including the deposit</li>
+            <li>Cancel 3 to 6 days before for a refund of your payments, minus the nonrefundable deposit</li>
+            <li>Cancel 2 days or less before your order date, including the same day or during the delivery window: no refund</li>
             <li>Cash accepted only after the deposit and delivery fee are paid, unless otherwise negotiated</li>
           </ul>
         </article>
@@ -897,8 +911,9 @@
           </article>
           <article class="pay-card">
             <h3>PayPal</h3>
+            <p class="pay-business">SweetWalks LLC</p>
             <p class="pay-handle">Scan or tap to pay</p>
-            <img src="images/pay/paypal.png?v=1119" width="200" height="200" loading="lazy" alt="PayPal QR code for SweetWalks">
+            <img src="images/pay/paypal.png?v=1119e" width="200" height="200" loading="lazy" alt="PayPal QR code for SweetWalks LLC">
             <a class="pay-link" href="https://www.paypal.com/qrcodes/p2pqrc/D6NA7KAPZJD9J" target="_blank" rel="noopener noreferrer">Open PayPal</a>
           </article>
           <article class="pay-card">
@@ -1020,6 +1035,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1119c"></script>
+  <script src="script.js?v=1119e"></script>
 </body>
 </html>

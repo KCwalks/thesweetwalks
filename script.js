@@ -239,6 +239,30 @@
       : "Estimated total: " + money(sum);
     var fb = document.querySelector("[data-float-order]");
     if (fb) fb.textContent = cart.length ? "Your order (" + cart.length + ")" : "Order Now";
+    checkMinimum();
+  }
+
+  // Delivery and meetup orders need at least a dozen; single cookies are pickup only.
+  // Friendly heads-up only, it never blocks sending.
+  function checkMinimum() {
+    var note = form.querySelector("[data-min-note]");
+    if (!note) return;
+    var selected = form.querySelector('input[name="fulfillment"]:checked');
+    var v = selected && selected.value;
+    var show = false;
+    if ((v === "Delivery" || v === "Meet up") && cart.length) {
+      var count = 0;
+      var wholeItems = false;
+      cart.forEach(function (item) {
+        var f = item.fields || {};
+        var q = parseInt(f.qty, 10) || 0;
+        var countable = item.kind === "cookie" || item.kind === "cupcake" || (item.kind === "other" && f.type === "Brownies");
+        if (countable) count += f.unit === "dozen" ? q * 12 : q;
+        else wholeItems = true;
+      });
+      show = !wholeItems && count > 0 && count < 12;
+    }
+    note.hidden = !show;
   }
 
   function resetRow(row) {
