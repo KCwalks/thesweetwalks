@@ -336,6 +336,7 @@
     if (val("email")) lines.push("Email: " + val("email"));
     lines.push("Date needed: " + val("date-needed"));
     lines.push("Time slot: " + val("time-slot"));
+    lines.push("Allergies: " + val("allergies"));
     var notes = (form.elements.notes && form.elements.notes.value || "").trim();
     if (notes) {
       lines.push("");
@@ -485,6 +486,7 @@
       fulfillment: fulfillment,
       delivery_address: fulfillment === "Delivery" ? val("delivery-area") : "",
       items: items,
+      allergies: val("allergies"),
       custom_request: val("custom"),
       notes: val("notes"),
       message: body
@@ -508,9 +510,158 @@
     });
   }
 
+  // ---- Required-field validation (submit and Instagram paths) ----
+  form.noValidate = true;
+  function fieldLabel(el) { return el.closest("label") || el.parentElement; }
+  function setFieldError(el, text) {
+    var holder = fieldLabel(el);
+    var err = holder.querySelector(".field-error");
+    if (!err) {
+      err = document.createElement("em");
+      err.className = "field-error";
+      err.setAttribute("aria-live", "polite");
+      holder.appendChild(err);
+    }
+    err.textContent = text;
+    el.setAttribute("aria-invalid", "true");
+    holder.classList.add("has-error");
+  }
+  function clearFieldError(el) {
+    var holder = fieldLabel(el);
+    if (!holder) return;
+    var err = holder.querySelector(".field-error");
+    if (err) err.remove();
+    el.removeAttribute("aria-invalid");
+    holder.classList.remove("has-error");
+  }
+  function clearAllErrors() {
+    form.querySelectorAll("[aria-invalid]").forEach(clearFieldError);
+    form.querySelectorAll(".choice-row.has-error, fieldset.has-error").forEach(function (n) { n.classList.remove("has-error"); });
+    var fe = form.querySelector("[data-form-error]");
+    if (fe) { fe.hidden = true; fe.textContent = ""; }
+  }
+  function isVisible(el) {
+    var n = el;
+    while (n && n !== form) { if (n.hidden) return false; n = n.parentElement; }
+    return true;
+  }
+  // A row counts as started once any choice is made or the quantity/unit is changed.
+  function rowStarted(row) {
+    var started = false;
+    row.querySelectorAll("select[data-field], input[data-field]").forEach(function (el) {
+      var f = el.getAttribute("data-field");
+      if (f === "qty") { if (el.value.trim() !== "" && el.value.trim() !== "1") started = true; }
+      else if (f === "unit") { if (el.value && el.value !== "each") started = true; }
+      else if (el.value) started = true;
+    });
+    return started;
+  }
+  var ROW_FIELD_MSG = {
+    flavor: "Please choose a flavor.",
+    type: "Please choose one.",
+    nuts: "Please choose with or without nuts.",
+    shape: "Please choose a shape.",
+    unit: "Please choose each or dozen.",
+    qty: "Please enter a quantity."
+  };
+  // Returns list of problem elements for a started row.
+  function rowProblems(row) {
+    var problems = [];
+    row.querySelectorAll("select[data-field], input[data-field]").forEach(function (el) {
+      if (!isVisible(el)) return;
+      var f = el.getAttribute("data-field");
+      if (f === "qty") {
+        var q = el.value.trim();
+        var max = parseInt(el.getAttribute("max") || "99", 10);
+        var n = parseInt(q, 10);
+        if (!/^\d+$/.test(q) || n < 1 || n > max) problems.push([el, "Please enter a quantity from 1 to " + max + "."]);
+      } else if (!el.value) {
+        problems.push([el, ROW_FIELD_MSG[f] || "Please choose one."]);
+      }
+    });
+    return problems;
+  }
+  function validateOrder() {
+    clearAllErrors();
+    var problems = [];
+    var completeRows = 0;
+    form.querySelectorAll(".order-row").forEach(function (row) {
+      if (!rowStarted(row)) return;
+      var rp = rowProblems(row);
+      if (rp.length) {
+        problems = problems.concat(rp);
+        var fs = row.closest("fieldset");
+        var msg = fs && fs.querySelector("[data-add-msg]");
+        if (msg) {
+          msg.className = "add-msg err";
+          msg.textContent = "This item isn't finished. Fill in the highlighted choices, or set it back to \"Choose\" to skip it.";
+        }
+      } else if (rowDescription(row)) {
+        completeRows++;
+      }
+    });
+    function val(n) { return (form.elements[n] && form.elements[n].value || "").trim(); }
+    var custom = val("custom");
+    if (!cart.length && !completeRows && !custom && !problems.length) {
+      var first = form.querySelector("[data-add-msg]");
+      if (first) {
+        first.className = "add-msg err";
+        first.textContent = "Your order is empty. Pick a dessert and tap \"Add to order\" first, or describe a custom request.";
+        problems.push([first.closest("fieldset"), null]);
+      }
+    }
+    function need(name, test, text) {
+      var el = form.elements[name];
+      if (!el) return;
+      if (!test(val(name), el)) problems.push([el, text]);
+    }
+    need("name", function (v) { return v.replace(/[^A-Za-z]/g, "").length >= 2; }, "Please enter your full name.");
+    need("phone", function (v) { return v.replace(/\D/g, "").length >= 10; }, "Please enter a phone number with area code.");
+    need("email", function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }, "Please enter a valid email address.");
+    need("date-needed", function (v, el) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+      return !el.min || v >= el.min;
+    }, "Please choose the date you need your order (today or later).");
+    need("time-slot", function (v) { return !!v; }, "Please choose a time slot.");
+    var selected = form.querySelector('input[name="fulfillment"]:checked');
+    if (!selected) {
+      var row = form.querySelector(".fulfillment .choice-row");
+      if (row) row.classList.add("has-error");
+      problems.push([row || form.querySelector('input[name="fulfillment"]'), null]);
+    } else if (selected.value === "Delivery") {
+      need("delivery-area", function (v) {
+        return v.length >= 12 && /\d/.test(v.replace(/\b\d{5}(-\d{4})?\b\s*$/, "")) && /[A-Za-z]{3,}/.test(v) && /\b\d{5}(-\d{4})?\b/.test(v);
+      }, "Please enter the full delivery address: street, city, and ZIP.");
+    }
+    need("allergies", function (v) { return v.length >= 2; }, "Please list any allergies, or type None.");
+
+    if (!problems.length) return true;
+    problems.forEach(function (p) { if (p[1] && p[0].matches && p[0].matches("input, select, textarea")) setFieldError(p[0], p[1]); });
+    var fe = form.querySelector("[data-form-error]");
+    if (fe) {
+      fe.hidden = false;
+      fe.textContent = "Please fill in the highlighted fields above before sending your order.";
+    }
+    var target = problems[0][0];
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (target.focus && target.matches && target.matches("input, select, textarea")) {
+      try { target.focus({ preventScroll: true }); } catch (err) { target.focus(); }
+    }
+    return false;
+  }
+  form.addEventListener("input", function (e) { if (e.target.getAttribute && e.target.getAttribute("aria-invalid")) clearFieldError(e.target); });
+  form.addEventListener("change", function (e) {
+    if (e.target.getAttribute && e.target.getAttribute("aria-invalid")) clearFieldError(e.target);
+    if (e.target.name === "fulfillment") {
+      var r = form.querySelector(".fulfillment .choice-row.has-error");
+      if (r) r.classList.remove("has-error");
+    }
+  });
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     if (sending) return;
+    if (!validateOrder()) return;
     var body = prepareOrder();
     if (!body) return;
     saveRememberedOrder();
@@ -536,7 +687,7 @@
   var igBtn = form.querySelector("[data-order-instagram]");
   if (igBtn) {
     igBtn.addEventListener("click", function () {
-      if (typeof form.reportValidity === "function" && !form.reportValidity()) return;
+      if (!validateOrder()) return;
       var body = prepareOrder();
       if (!body) return;
       saveRememberedOrder();

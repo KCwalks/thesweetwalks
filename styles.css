@@ -1768,3 +1768,13 @@ html.thanks-cutoff-passed .deadline-list [data-thanks-cutoff] { display: none; }
   font-weight: 700;
   line-height: 1.4;
 }
+
+/* Required fields and inline errors */
+.required-note { margin: 0 0 0.8rem; font-weight: 700; font-size: 0.92rem; color: var(--cocoa-soft); }
+.order-form .field-error { display: block; font-style: normal; font-weight: 700; font-size: 0.85rem; color: #a3261b; }
+.order-form label.has-error input,
+.order-form label.has-error select,
+.order-form label.has-error textarea { border-color: #a3261b !important; box-shadow: 0 0 0 2px rgba(163, 38, 27, 0.18); }
+.order-form .choice-row.has-error { outline: 2px solid #a3261b; outline-offset: 4px; border-radius: 0.6rem; }
+.order-form .field-help { font-weight: 400; font-size: 0.82rem; }
+.order-form-error { margin: 0.75rem 0 0; padding: 0.65rem 0.9rem; border-radius: 0.8rem; background: #fdecea; border: 1.5px solid #a3261b; color: #7a1d14; font-weight: 700; text-align: center; }

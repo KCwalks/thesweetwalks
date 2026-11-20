@@ -587,14 +587,15 @@
 
         <p class="allergen-note"><strong>Allergen note:</strong> Our kitchen handles peanuts, tree nuts, wheat, eggs, and dairy. Products may contain or come in contact with these allergens.</p>
 
-        <form id="order-form" class="order-form" action="mailto:KCwalks@thesweetwalks.com?subject=Order%20request" method="post" enctype="text/plain">
+        <form id="order-form" class="order-form" action="mailto:KCwalks@thesweetwalks.com?subject=Order%20request" method="post" enctype="text/plain" novalidate>
+          <p class="required-note"><span class="req">*</span> Required. Add at least one item (or a custom request), and fill in every required field.</p>
           <fieldset class="card" data-repeat="cookie">
             <legend>Cookies</legend>
             <p class="fieldset-note">$2.50 each, or $25 per dozen. Same price for every flavor. Single cookies are pickup only.</p>
             <div class="rows" data-rows>
               <div class="order-row" data-item="cookie">
                 <label>
-                  <span>Flavor</span>
+                  <span>Flavor <span class="req">*</span></span>
                   <select name="cookie-flavor" data-field="flavor">
                     <option value="">Choose a flavor</option>
                     <option value="Chocolate Chip">Chocolate Chip</option>
@@ -606,7 +607,7 @@
                   </select>
                 </label>
                 <label class="nuts-field" data-nuts>
-                  <span>Nuts <span class="hint">(for Chocolate Chip)</span></span>
+                  <span>Nuts <span class="req">*</span> <span class="hint">(for Chocolate Chip)</span></span>
                   <select name="cookie-nuts" data-field="nuts">
                     <option value="">Choose one</option>
                     <option value="with nuts">With nuts</option>
@@ -614,11 +615,11 @@
                   </select>
                 </label>
                 <label class="qty-field">
-                  <span>Quantity</span>
+                  <span>Quantity <span class="req">*</span></span>
                   <input type="number" name="cookie-qty" data-field="qty" value="1" min="1" max="99" inputmode="numeric" placeholder="">
                 </label>
                 <label class="unit-field">
-                  <span>Unit</span>
+                  <span>Unit <span class="req">*</span></span>
                   <select name="cookie-unit" data-field="unit">
                     <option value="each">Each</option>
                     <option value="dozen">Dozen</option>
@@ -636,7 +637,7 @@
             <div class="rows" data-rows>
               <div class="order-row" data-item="cupcake">
                 <label>
-                  <span>Flavor</span>
+                  <span>Flavor <span class="req">*</span></span>
                   <select name="cupcake-flavor" data-field="flavor">
                     <option value="">Choose a flavor</option>
                     <option value="Hot Milk">Hot Milk</option>
@@ -651,11 +652,11 @@
                   </select>
                 </label>
                 <label class="qty-field">
-                  <span>Quantity</span>
+                  <span>Quantity <span class="req">*</span></span>
                   <input type="number" name="cupcake-qty" data-field="qty" value="1" min="1" max="99" inputmode="numeric" placeholder="">
                 </label>
                 <label class="unit-field">
-                  <span>Unit</span>
+                  <span>Unit <span class="req">*</span></span>
                   <select name="cupcake-unit" data-field="unit">
                     <option value="each">Each</option>
                     <option value="dozen">Dozen</option>
@@ -673,7 +674,7 @@
             <div class="rows" data-rows>
               <div class="order-row cake-row" data-item="cake">
                 <label>
-                  <span>Cake</span>
+                  <span>Cake <span class="req">*</span></span>
                   <select name="cake-type" data-field="type">
                     <option value="">Choose a cake</option>
                     <option value="8&quot; Two-Layer Cake">8" Two-Layer Cake</option>
@@ -682,7 +683,7 @@
                   </select>
                 </label>
                 <label class="shape-field" data-shape>
-                  <span>Shape <span class="hint">(8" cake)</span></span>
+                  <span>Shape <span class="req">*</span> <span class="hint">(8" cake)</span></span>
                   <select name="cake-shape" data-field="shape">
                     <option value="">Choose a shape</option>
                     <option value="Round">Round</option>
@@ -691,7 +692,7 @@
                   </select>
                 </label>
                 <label class="flavor-field" data-cake-flavor>
-                  <span>Flavor <span class="hint">(8" or Bundt)</span></span>
+                  <span>Flavor <span class="req">*</span> <span class="hint">(8" or Bundt)</span></span>
                   <select name="cake-flavor" data-field="flavor">
                     <option value="">Choose a flavor</option>
                     <optgroup label="8&quot; Two-Layer Cake">
@@ -713,7 +714,7 @@
                   </select>
                 </label>
                 <label class="qty-field">
-                  <span>Quantity</span>
+                  <span>Quantity <span class="req">*</span></span>
                   <input type="number" name="cake-qty" data-field="qty" value="1" min="1" max="20" inputmode="numeric" placeholder="">
                 </label>
                 <button type="button" class="row-remove" data-remove hidden>Remove</button>
@@ -728,7 +729,7 @@
             <div class="rows" data-rows>
               <div class="order-row" data-item="other">
                 <label>
-                  <span>Item</span>
+                  <span>Item <span class="req">*</span></span>
                   <select name="other-type" data-field="type">
                     <option value="">Choose an item</option>
                     <option value="Brownies">Brownies</option>
@@ -737,7 +738,7 @@
                   </select>
                 </label>
                 <label class="nuts-field" data-nuts>
-                  <span>Nuts <span class="hint">(brownies and fudge)</span></span>
+                  <span>Nuts <span class="req">*</span> <span class="hint">(brownies and fudge)</span></span>
                   <select name="other-nuts" data-field="nuts">
                     <option value="">Choose one</option>
                     <option value="with nuts">With nuts</option>
@@ -745,11 +746,11 @@
                   </select>
                 </label>
                 <label class="qty-field">
-                  <span>Quantity</span>
+                  <span>Quantity <span class="req">*</span></span>
                   <input type="number" name="other-qty" data-field="qty" value="1" min="1" max="99" inputmode="numeric" placeholder="">
                 </label>
                 <label class="unit-field" data-other-unit>
-                  <span>Unit <span class="hint">(brownies)</span></span>
+                  <span>Unit <span class="req">*</span> <span class="hint">(brownies)</span></span>
                   <select name="other-unit" data-field="unit">
                     <option value="each">Each</option>
                     <option value="dozen">Dozen</option>
@@ -782,8 +783,8 @@
               <input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="(916) 555-0123" pattern="[0-9 +\-\(\)\.]{10,}" title="Please enter a phone number with area code" required>
             </label>
             <label class="full">
-              <span>Email <span class="hint">(optional)</span></span>
-              <input type="email" name="email" autocomplete="email" placeholder="you@example.com">
+              <span>Email <span class="req">*</span></span>
+              <input type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
             </label>
             <label class="full">
               <span>Date needed <span class="req">*</span></span>
@@ -802,7 +803,7 @@
           </fieldset>
 
           <fieldset class="card fulfillment">
-            <legend>Pickup or delivery</legend>
+            <legend>Pickup or delivery <span class="req">*</span></legend>
             <p class="fieldset-note">Pickup is at 2801 Arden Way, Sacramento, at the date and time you schedule. Anywhere else is delivery. Delivery orders need a $25 minimum (a dozen cookies or brownies, or any cake or pie, qualifies). Single cookies are pickup only. <a href="#delivery">See Pickup &amp; Delivery</a>.</p>
             <div class="choice-row">
               <label class="choice">
@@ -817,11 +818,16 @@
             <p class="min-order-alert" data-min-note hidden role="status">Just a heads-up: delivery orders need a $25 minimum (a dozen cookies or brownies, or any cake or pie, qualifies). Single cookies are pickup only. Add a few more treats or choose pickup. You can still send your request and we'll sort it out with you.</p>
             <label class="full" data-delivery-area>
               <span><span data-delivery-label>Delivery address</span> <span class="req">*</span></span>
-              <textarea name="delivery-area" rows="2" autocomplete="street-address" placeholder="Street address, city, and ZIP"></textarea>
+              <textarea name="delivery-area" rows="2" autocomplete="street-address" placeholder="Street address, city, and ZIP (example: 123 Main St, Sacramento, CA 95825)"></textarea>
             </label>
             <label class="full">
-              <span>Anything else we should know?</span>
-              <textarea name="notes" rows="3" placeholder="Allergies, a celebration, gate codes, or other details."></textarea>
+              <span>Allergies <span class="req">*</span></span>
+              <input type="text" name="allergies" autocomplete="off" placeholder="List any allergies, or type None" required>
+              <span class="hint field-help">List any allergies, or type None.</span>
+            </label>
+            <label class="full">
+              <span>Anything else we should know? <span class="hint">(optional)</span></span>
+              <textarea name="notes" rows="3" placeholder="A celebration, gate codes, or other details."></textarea>
             </label>
           </fieldset>
 
@@ -836,6 +842,7 @@
           <div class="sw-hp" aria-hidden="true">
             <label>Leave this field empty <input type="text" name="_honey" tabindex="-1" autocomplete="off"></label>
           </div>
+          <p class="order-form-error" data-form-error hidden role="alert"></p>
           <div class="order-actions">
             <button class="btn" type="submit">Send order request</button>
             <button class="btn btn-ig-order" type="button" data-order-instagram>
