@@ -833,6 +833,9 @@
             <p class="note">This is just an estimate from the menu prices. Fudge and custom work are priced when you order, and we will confirm the total when we reply.</p>
           </div>
 
+          <div class="sw-hp" aria-hidden="true">
+            <label>Leave this field empty <input type="text" name="_honey" tabindex="-1" autocomplete="off"></label>
+          </div>
           <div class="order-actions">
             <button class="btn" type="submit">Send order request</button>
             <button class="btn btn-ig-order" type="button" data-order-instagram>
@@ -840,6 +843,7 @@
               Order on Instagram
             </button>
           </div>
+          <p class="order-send-status" data-send-status hidden aria-live="polite" role="status"></p>
           <p class="next-steps" data-next-steps aria-live="polite"><strong>What happens next:</strong> <span data-next-steps-text>After you send your order request, we'll text you within 24 hours to confirm your total and deposit.</span></p>
           <p class="remember-row">
             <label class="remember-label">
@@ -848,7 +852,7 @@
             </label>
             <button type="button" class="remember-clear" data-clear-saved hidden>Not you? Clear saved info</button>
           </p>
-          <p class="form-help">The email button lets you send with Gmail, Outlook, Yahoo, or your mail app, addressed to <a href="mailto:KCwalks@thesweetwalks.com?subject=Order%20request">KCwalks@thesweetwalks.com</a> with the subject “Order request.” The Instagram button copies the same order, then opens a chat with <a href="https://ig.me/m/sweetwalks_bake" rel="noopener noreferrer" target="_blank">@sweetwalks_bake</a> so you can paste and send it.</p>
+          <p class="form-help">“Send order request” sends your order straight to <a href="mailto:KCwalks@thesweetwalks.com?subject=Order%20request">KCwalks@thesweetwalks.com</a>. If it can't go through, you can send it with Gmail, Outlook, Yahoo, or your mail app instead. The Instagram button copies the same order, then opens a chat with <a href="https://ig.me/m/sweetwalks_bake" rel="noopener noreferrer" target="_blank">@sweetwalks_bake</a> so you can paste and send it.</p>
           <p class="ig-copy-notice" data-ig-notice hidden aria-live="polite"></p>
           <pre class="ig-copy-text" data-ig-copy-text hidden></pre>
         </form>

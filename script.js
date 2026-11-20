@@ -452,13 +452,85 @@
     box.classList.add("is-sent");
   }
 
+  var ORDER_ENDPOINT = "https://formsubmit.co/ajax/KCwalks@thesweetwalks.com";
+  var sending = false;
+
+  function showSendStatus(ok, text) {
+    var st = form.querySelector("[data-send-status]");
+    if (!st) return;
+    st.hidden = false;
+    st.className = "order-send-status " + (ok ? "ok" : "err");
+    st.textContent = text;
+    if (ok) st.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function orderPayload(body) {
+    function val(n) { return (form.elements[n] && form.elements[n].value || "").trim(); }
+    var name = val("name");
+    var email = val("email");
+    var fulfillment = (form.querySelector('input[name="fulfillment"]:checked') || {}).value || "";
+    var items = cart.map(function (d) {
+      return d.text + (d.total != null ? " (" + money(d.total) + ")" : "");
+    }).join("\n");
+    var data = {
+      _subject: "New SweetWalks order request - " + (name || "website customer"),
+      _template: "table",
+      _captcha: "false",
+      _honey: val("_honey"),
+      name: name,
+      phone: val("phone"),
+      email: email,
+      date_needed: val("date-needed"),
+      time_slot: val("time-slot"),
+      fulfillment: fulfillment,
+      delivery_address: fulfillment === "Delivery" ? val("delivery-area") : "",
+      items: items,
+      custom_request: val("custom"),
+      notes: val("notes"),
+      message: body
+    };
+    if (email) data._replyto = email;
+    return data;
+  }
+
+  function sendOrder(body) {
+    if (!window.fetch) return Promise.reject(new Error("no fetch"));
+    return fetch(ORDER_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(orderPayload(body))
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (json) {
+        var okFlag = json && (json.success === true || json.success === "true");
+        if (!res.ok || !okFlag) throw new Error((json && json.message) || ("HTTP " + res.status));
+        return json;
+      });
+    });
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
+    if (sending) return;
     var body = prepareOrder();
     if (!body) return;
     saveRememberedOrder();
     showNextSteps();
-    if (window.swEmailChooser) window.swEmailChooser("Order request", body);
+    var btn = form.querySelector('button[type="submit"]');
+    var label = btn ? btn.textContent : "";
+    var st = form.querySelector("[data-send-status]");
+    if (st) st.hidden = true;
+    sending = true;
+    if (btn) { btn.disabled = true; btn.textContent = "Sending..."; }
+    sendOrder(body).then(function () {
+      showSendStatus(true, "Order request received! We'll text you within 24 hours to confirm your total and deposit.");
+    }).catch(function () {
+      if (window.swEmailChooser) {
+        window.swEmailChooser("Order request", body, "Our automatic send didn't go through. Please pick an option below, then press Send in your email app so your order reaches us.");
+      }
+    }).then(function () {
+      sending = false;
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+    });
   });
 
   var igBtn = form.querySelector("[data-order-instagram]");
@@ -849,6 +921,7 @@
     '<div class="email-chooser-box">' +
     '<button type="button" class="email-chooser-close" aria-label="Close">&times;</button>' +
     "<h3>Email us</h3>" +
+    '<p class="email-chooser-alert" hidden></p>' +
     '<p class="email-chooser-addr">' + ADDR + "</p>" +
     '<div class="email-chooser-options">' +
     '<a class="btn" data-mail="gmail" target="_blank" rel="noopener noreferrer">Gmail</a>' +
@@ -877,10 +950,15 @@
     if (bo) q.push("body=" + enc(bo));
     modal.querySelector('[data-mail="app"]').href = "mailto:" + ADDR + (q.length ? "?" + q.join("&") : "");
   }
-  function open(subject, body) {
+  var alertEl = modal.querySelector(".email-chooser-alert");
+  var copyBtnEl = modal.querySelector('[data-mail="copy"]');
+  function open(subject, body, alertText) {
     current.subject = subject || "";
     current.body = body || "";
     note.textContent = "";
+    alertEl.textContent = alertText || "";
+    alertEl.hidden = !alertText;
+    copyBtnEl.textContent = current.body ? "Copy order and email address" : "Copy email address";
     setLinks();
     modal.hidden = false;
     var first = modal.querySelector('[data-mail="gmail"]');
@@ -893,9 +971,18 @@
     if (e.target === modal || e.target.closest(".email-chooser-close")) { close(); return; }
     var copyBtn = e.target.closest('[data-mail="copy"]');
     if (copyBtn) {
-      var text = ADDR;
+      var hasBody = !!current.body;
+      var text = hasBody
+        ? "Send to: " + ADDR + "\r\nSubject: " + (current.subject || "Order request") + "\r\n\r\n" + current.body
+        : ADDR;
       var done = function (ok) {
-        note.textContent = ok ? "Email address copied." : "Our email is " + ADDR;
+        if (hasBody) {
+          note.textContent = ok
+            ? "Order and email address copied. Paste them into a new email to " + ADDR + " and send."
+            : "We couldn't copy automatically. Please email your order to " + ADDR + ".";
+        } else {
+          note.textContent = ok ? "Email address copied." : "Our email is " + ADDR;
+        }
       };
       function fallbackCopy() {
         var ta = document.createElement("textarea");
