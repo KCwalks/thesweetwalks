@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1121d">
+  <link rel="stylesheet" href="styles.css?v=1121e">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -185,15 +185,25 @@
   ]
 }
   </script>
+  <script>
+    try {
+      if (sessionStorage.getItem("sw-promo-dismissed-2026-thanks")) document.documentElement.classList.add("promo-hidden");
+      var parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+      var g = {};
+      parts.forEach(function (p) { g[p.type] = p.value; });
+      if ((g.year + g.month + g.day + g.hour + g.minute + g.second) > "20261122235959") document.documentElement.classList.add("promo-hidden", "thanks-cutoff-passed");
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
-  <div class="promo-banner" data-promo-banner>
+  <div class="promo-banner" data-promo-banner data-thanks-cutoff-banner>
     <div class="wrap promo-inner">
-      <p>Now taking Christmas and New Year's orders! Christmas orders are due by December 22.</p>
+      <p class="promo-cutoff" data-thanks-cutoff>Last day for Thanksgiving orders is Sunday 11/22!</p>
+      <p>Thanksgiving is Thursday, Nov 26.</p>
       <a href="#menu">Order now</a>
-      <button type="button" class="promo-dismiss" data-promo-dismiss aria-label="Close holiday announcement">&times;</button>
+      <button type="button" class="promo-dismiss" data-promo-dismiss aria-label="Dismiss holiday announcement">&times;</button>
     </div>
   </div>
 
@@ -246,6 +256,7 @@
           <p class="banner-kicker">Now taking holiday orders</p>
           <h2 id="holiday-deadlines">Holiday Order Deadlines</h2>
           <ul class="deadline-list">
+            <li data-thanks-cutoff><span>Thanksgiving</span> <strong>Sunday 11/22</strong></li>
             <li><span>Christmas</span> <strong>Order by December 22</strong> <em>Last pickup or delivery December 24</em></li>
             <li><span>New Year's</span> <strong>Order by December 30</strong> <em>Last pickup or delivery December 31</em></li>
           </ul>
@@ -323,7 +334,7 @@
           <fieldset class="card menu-cat" data-cat="cake">
             <legend>Cakes</legend>
             <div class="item-list">
-              <div class="item-row" data-key="cake-8in" data-name="8&quot; Two-Layer Cake" data-price="40" data-details="layer" data-desc="Round, heart, or pumpkin shape. Flavors: Hot Milk, Yellow, Strawberry, Vanilla, Chocolate, Oreo, Lemon, 7Up, Pineapple Upside Down."></div>
+              <div class="item-row" data-key="cake-8in" data-name="8&quot; Two-Layer Cake" data-price="40" data-details="layer" data-desc="Round, heart, or pumpkin shape. A Thanksgiving centerpiece in any of our cake flavors. Flavors: Hot Milk, Yellow, Strawberry, Vanilla, Chocolate, Oreo, Lemon, 7Up, Pineapple Upside Down."></div>
               <div class="item-row" data-key="cake-9x13" data-name="9x13 Cake" data-price="35"></div>
               <div class="item-row" data-key="cake-bundt-7up" data-name="7Up Bundt Cake" data-price="35"></div>
               <div class="item-row" data-key="cake-bundt-lemon" data-name="Lemon Bundt Cake" data-price="35"></div>
@@ -707,7 +718,7 @@
   <footer class="site-footer">
     <div class="wrap">
       <p><a class="btn" href="#menu">Order Now</a></p>
-      <p class="signoff holiday-signoff">Happy Holidays!</p>
+      <p class="signoff holiday-signoff">Happy Thanksgiving &amp; Happy Holidays!</p>
       <p class="signoff">Baked with love in Sacramento, CA</p>
       <p class="legal">SWEETWALKS LLC · SweetWalks by the Walkers, Homemade Baked Goods</p>
       <p class="footer-contact">
@@ -725,6 +736,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1121b"></script>
+  <script src="script.js?v=1121e"></script>
 </body>
 </html>

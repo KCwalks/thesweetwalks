@@ -844,16 +844,44 @@
 })();
 
 
+// Hide Thanksgiving cutoff after Sunday, Nov 22, 2026, 11:59 PM Pacific.
+// The message stays visible if JavaScript is off.
+(function () {
+  function pastCutoff() {
+    try {
+      var parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Los_Angeles",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23"
+      }).formatToParts(new Date());
+      var g = {};
+      parts.forEach(function (p) { g[p.type] = p.value; });
+      return (g.year + g.month + g.day + g.hour + g.minute + g.second) > "20261122235959";
+    } catch (e) {
+      return Date.now() > Date.parse("2026-11-22T23:59:59-08:00");
+    }
+  }
+  if (!pastCutoff()) return;
+  document.documentElement.classList.add("promo-hidden", "thanks-cutoff-passed");
+  var nodes = document.querySelectorAll("[data-thanks-cutoff], [data-thanks-cutoff-banner]");
+  for (var i = 0; i < nodes.length; i++) nodes[i].hidden = true;
+})();
+
 // Holiday promo banner dismiss (same visit only)
 (function () {
   var banner = document.querySelector("[data-promo-banner]");
   var btn = document.querySelector("[data-promo-dismiss]");
   if (!banner || !btn) return;
-  try { if (sessionStorage.getItem("sw-promo-dismissed-2026-xmas")) banner.hidden = true; } catch (e) {}
+  try { if (sessionStorage.getItem("sw-promo-dismissed-2026-thanks")) banner.hidden = true; } catch (e) {}
   btn.addEventListener("click", function () {
     banner.hidden = true;
     document.documentElement.classList.add("promo-hidden");
-    try { sessionStorage.setItem("sw-promo-dismissed-2026-xmas", "1"); } catch (e) {}
+    try { sessionStorage.setItem("sw-promo-dismissed-2026-thanks", "1"); } catch (e) {}
   });
 })();
 
