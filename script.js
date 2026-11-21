@@ -9,7 +9,7 @@
   var ORDER_CC = "chancewalkk01@gmail.com";
   // Optional backup log: paste the Google Apps Script web app URL here
   // (see order-log-apps-script.gs). Leave empty to turn it off.
-  var SHEET_URL = "";
+  var SHEET_URL = "https://script.google.com/macros/s/AKfycbwTlKMBPkfOh3PLbOPy936-IWHDynR3y-kCzQp4--BmXrnWxTvLiJ6wWvDcTBC4p57Xjw/exec";
   var PHONE_DISPLAY = "(916) 720-9564";
   var PHONE_SMS = "sms:+19167209564";
   var PICKUP_VALUE = "Pickup at 2801 Arden Way, Sacramento";
