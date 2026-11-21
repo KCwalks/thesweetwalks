@@ -1,5 +1,5 @@
 /* SweetWalks service worker: network-first, cache only a home-page fallback for offline. */
-var CACHE = "sweetwalks-v1121f";
+var CACHE = "sweetwalks-v1121g";
 var OFFLINE_URL = "/";
 
 self.addEventListener("install", function (event) {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -13,19 +13,19 @@
   <meta property="og:title" content="SweetWalks | Homemade Cookies, Cakes &amp; Cupcakes in Sacramento, CA">
   <meta property="og:description" content="Homemade cookies, cupcakes, cakes and brownies baked fresh in Sacramento. Pickup or delivery to Rocklin, Placer County and the Bay Area. Order today!">
   <meta property="og:url" content="https://thesweetwalks.com/">
-  <meta property="og:image" content="https://thesweetwalks.com/images/og-sweetwalks-1200x630.jpg">
+  <meta property="og:image" content="https://thesweetwalks.com/images/og-sweetwalks-1200x630.jpg?v=2">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="SweetWalks by the Walkers logo with a cupcake and a cookie">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SweetWalks | Homemade Cookies, Cakes &amp; Cupcakes in Sacramento, CA">
   <meta name="twitter:description" content="Homemade cookies, cupcakes, cakes and brownies baked fresh in Sacramento. Pickup or delivery to Rocklin, Placer County and the Bay Area. Order today!">
-  <meta name="twitter:image" content="https://thesweetwalks.com/images/og-sweetwalks-1200x630.jpg">
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png">
-  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
-  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="twitter:image" content="https://thesweetwalks.com/images/og-sweetwalks-1200x630.jpg?v=2">
+  <link rel="icon" href="favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16.png?v=2">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=2">
+  <link rel="manifest" href="manifest.webmanifest?v=2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="SweetWalks">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1121f">
+  <link rel="stylesheet" href="styles.css?v=1121g">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -49,7 +49,7 @@
       "url": "https://thesweetwalks.com/",
       "telephone": "+19167209564",
       "email": "KCwalks@thesweetwalks.com",
-      "image": "https://thesweetwalks.com/images/og-sweetwalks-1200x630.jpg",
+      "image": "https://thesweetwalks.com/images/og-sweetwalks-1200x630.jpg?v=2",
       "areaServed": [
         {
           "@type": "City",
@@ -137,7 +137,7 @@
           "name": "How far ahead should I order?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "It depends on the order and the date. Holiday dates fill up fast. Orders needed within 72 hours are paid in full. Call or text us at (916) 720-9564 and we'll work it out with you."
+            "text": "It depends on the order and the date. Holiday dates fill up fast. Orders under $50 or needed within 72 hours are paid in full. Call or text us at (916) 720-9564 and we'll work it out with you."
           }
         },
         {
@@ -186,13 +186,33 @@
 }
   </script>
   <script>
-    try {
-      if (sessionStorage.getItem("sw-promo-dismissed-2026-thanks")) document.documentElement.classList.add("promo-hidden");
-      var parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
-      var g = {};
-      parts.forEach(function (p) { g[p.type] = p.value; });
-      if ((g.year + g.month + g.day + g.hour + g.minute + g.second) > "20261122235959") document.documentElement.classList.add("promo-hidden", "thanks-cutoff-passed");
-    } catch (e) {}
+    // Holiday banner switch (same check runs again in script.js).
+    // Thanksgiving banner ends Sunday, November 22, 2026 at 11:59:59 PM Pacific.
+    // Christmas banner runs Monday, November 23, 2026 12:00 AM Pacific
+    // through Thursday, December 24, 2026 11:59:59 PM Pacific.
+    (function () {
+      var root = document.documentElement;
+      root.className = root.className.replace(/(^|\s)no-js(\s|$)/, " ") + " js";
+      try {
+        var now = new Date().getTime();
+        var xmasStart = Date.UTC(2026, 10, 23, 8, 0, 0);
+        var xmasEnd = Date.UTC(2026, 11, 25, 8, 0, 0);
+        var key = "sw-promo-dismissed-2026-thanks";
+        if (now >= xmasStart) { root.className += " thanks-cutoff-passed"; key = "sw-promo-dismissed-2026-xmas"; }
+        if (now >= xmasStart && now < xmasEnd) root.className += " xmas-on";
+        if (now >= xmasEnd) root.className += " promo-hidden";
+        if (window.sessionStorage && sessionStorage.getItem(key)) root.className += " promo-hidden";
+      } catch (e) {}
+      try {
+        // Old iPads (iOS 12-14.0) do not support gap in flexbox.
+        var f = document.createElement("div");
+        f.style.display = "flex"; f.style.flexDirection = "column"; f.style.rowGap = "1px";
+        f.appendChild(document.createElement("div")); f.appendChild(document.createElement("div"));
+        root.appendChild(f);
+        if (f.scrollHeight !== 1) root.className += " no-flexgap";
+        root.removeChild(f);
+      } catch (e) {}
+    })();
   </script>
 </head>
 <body>
@@ -200,8 +220,16 @@
 
   <div class="promo-banner" data-promo-banner data-thanks-cutoff-banner>
     <div class="wrap promo-inner">
-      <p class="promo-cutoff" data-thanks-cutoff>Last day for Thanksgiving orders is Sunday 11/22!</p>
-      <p>Thanksgiving is Thursday, Nov 26.</p>
+      <p class="promo-cutoff" data-thanks-cutoff>Last day for Thanksgiving orders is Sunday, November 22!</p>
+      <p>Thanksgiving is Thursday, November 26.</p>
+      <a href="#menu">Order now</a>
+      <button type="button" class="promo-dismiss" data-promo-dismiss aria-label="Dismiss holiday announcement">&times;</button>
+    </div>
+  </div>
+
+  <div class="promo-banner promo-xmas" data-promo-banner data-xmas-banner>
+    <div class="wrap promo-inner">
+      <p class="promo-cutoff">Christmas orders: order by Tuesday, December 22. Last pickup or delivery Thursday, December 24.</p>
       <a href="#menu">Order now</a>
       <button type="button" class="promo-dismiss" data-promo-dismiss aria-label="Dismiss holiday announcement">&times;</button>
     </div>
@@ -211,8 +239,8 @@
     <div class="wrap header-inner">
       <a class="brand" href="#top">
         <picture>
-          <source type="image/webp" srcset="images/logo-640.webp">
-          <img src="images/logo-640.png" alt="SweetWalks by the Walkers logo, a homemade bakery in Sacramento">
+          <source type="image/webp" srcset="images/logo-640.webp?v=2">
+          <img src="images/logo-640.png?v=2" alt="SweetWalks by the Walkers logo, a homemade bakery in Sacramento">
         </picture>
         <span class="brand-text">
           <span class="name">SweetWalks</span>
@@ -241,8 +269,8 @@
     <section class="hero" id="top">
       <div class="wrap hero-inner">
         <picture>
-          <source type="image/webp" srcset="images/logo-640.webp">
-          <img class="hero-logo" src="images/logo-640.png" width="640" height="640" alt="SweetWalks by the Walkers logo, with a cupcake and a cookie, homemade bakery in Sacramento">
+          <source type="image/webp" srcset="images/logo-640.webp?v=2">
+          <img class="hero-logo" src="images/logo-640.png?v=2" width="640" height="640" alt="SweetWalks by the Walkers logo, with a cupcake and a cookie, homemade bakery in Sacramento">
         </picture>
         <p class="eyebrow">Homemade Baked Goods · <span class="nowrap">Sacramento, CA</span></p>
         <h1>Homemade cookies, cakes and cupcakes in Sacramento</h1>
@@ -256,9 +284,9 @@
           <p class="banner-kicker">Now taking holiday orders</p>
           <h2 id="holiday-deadlines">Holiday Order Deadlines</h2>
           <ul class="deadline-list">
-            <li data-thanks-cutoff><span>Thanksgiving</span> <strong>Sunday 11/22</strong></li>
-            <li><span>Christmas</span> <strong>Order by December 22</strong> <em>Last pickup or delivery December 24</em></li>
-            <li><span>New Year's</span> <strong>Order by December 30</strong> <em>Last pickup or delivery December 31</em></li>
+            <li data-thanks-cutoff><span>Thanksgiving</span> <strong>Order by Sunday, November 22</strong> <em>Thanksgiving is Thursday, November 26</em></li>
+            <li><span>Christmas</span> <strong>Order by Tuesday, December 22</strong> <em>Last pickup or delivery Thursday, December 24</em></li>
+            <li><span>New Year's</span> <strong>Order by Wednesday, December 30</strong> <em>Last pickup or delivery Thursday, December 31</em></li>
           </ul>
           <p class="banner-extra">Reserve your cakes, pies, and cookie trays early. Holiday dates fill up fast!</p>
         </aside>
@@ -272,6 +300,11 @@
           <h2>Menu</h2>
           <p>Tap <strong>+</strong> next to anything you want, or type a number in the box. Your order adds up below.</p>
         </header>
+        <div class="js-fallback" data-js-fallback role="note">
+          <p><strong>Ordering on an older phone or tablet?</strong> If the + and &minus; buttons don't work, call or text <a href="tel:+19167209564">(916) 720-9564</a> to order. You can also type how many you want in each box and press Send my order.</p>
+          <p class="js-fallback-actions"><a class="btn" href="tel:+19167209564">Call (916) 720-9564</a> <a class="btn btn-ghost" href="sms:+19167209564">Text (916) 720-9564</a></p>
+        </div>
+        <noscript><p class="js-fallback-note"><strong>Call or text (916) 720-9564 to order.</strong></p></noscript>
         <p class="allergen-note"><strong>Allergen note:</strong> Our kitchen handles peanuts, tree nuts, wheat, eggs, and dairy. Products may contain or come in contact with these allergens.</p>
 
         <aside class="reorder-card" data-reorder-card hidden>
@@ -305,13 +338,41 @@
               </figure>
             </div>
             <div class="item-list">
-              <div class="item-row" data-key="cookie-cc-nuts" data-name="Chocolate Chip with nuts" data-noun="cookies" data-each="2.5" data-dozen="25"></div>
-              <div class="item-row" data-key="cookie-cc-nonuts" data-name="Chocolate Chip without nuts" data-noun="cookies" data-each="2.5" data-dozen="25"></div>
-              <div class="item-row" data-key="cookie-snickerdoodle" data-name="Snickerdoodle" data-noun="cookies" data-each="2.5" data-dozen="25"></div>
-              <div class="item-row" data-key="cookie-macadamia" data-name="Macadamia Nut" data-noun="cookies" data-each="2.5" data-dozen="25"></div>
-              <div class="item-row" data-key="cookie-peanut-butter" data-name="Peanut Butter" data-noun="cookies" data-each="2.5" data-dozen="25"></div>
-              <div class="item-row" data-key="cookie-sugar" data-name="Sugar" data-noun="cookies" data-each="2.5" data-dozen="25"></div>
-              <div class="item-row" data-key="cookie-oatmeal-raisin" data-name="Oatmeal Raisin" data-noun="cookies" data-each="2.5" data-dozen="25"></div>
+              <div data-static="1" class="item-row has-dozen" data-key="cookie-cc-nuts" data-name="Chocolate Chip with nuts" data-noun="cookies" data-each="2.5" data-dozen="25">
+                <div class="item-info"><label class="item-name" for="qty-cookie-cc-nuts">Chocolate Chip with nuts</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Chocolate Chip with nuts">&minus;</button><input type="number" id="qty-cookie-cc-nuts" name="qty-cookie-cc-nuts" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Chocolate Chip with nuts">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Chocolate Chip with nuts">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cookie-cc-nonuts" data-name="Chocolate Chip without nuts" data-noun="cookies" data-each="2.5" data-dozen="25">
+                <div class="item-info"><label class="item-name" for="qty-cookie-cc-nonuts">Chocolate Chip without nuts</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Chocolate Chip without nuts">&minus;</button><input type="number" id="qty-cookie-cc-nonuts" name="qty-cookie-cc-nonuts" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Chocolate Chip without nuts">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Chocolate Chip without nuts">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cookie-snickerdoodle" data-name="Snickerdoodle" data-noun="cookies" data-each="2.5" data-dozen="25">
+                <div class="item-info"><label class="item-name" for="qty-cookie-snickerdoodle">Snickerdoodle</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Snickerdoodle">&minus;</button><input type="number" id="qty-cookie-snickerdoodle" name="qty-cookie-snickerdoodle" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Snickerdoodle">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Snickerdoodle">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cookie-macadamia" data-name="Macadamia Nut" data-noun="cookies" data-each="2.5" data-dozen="25">
+                <div class="item-info"><label class="item-name" for="qty-cookie-macadamia">Macadamia Nut</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Macadamia Nut">&minus;</button><input type="number" id="qty-cookie-macadamia" name="qty-cookie-macadamia" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Macadamia Nut">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Macadamia Nut">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cookie-peanut-butter" data-name="Peanut Butter" data-noun="cookies" data-each="2.5" data-dozen="25">
+                <div class="item-info"><label class="item-name" for="qty-cookie-peanut-butter">Peanut Butter</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Peanut Butter">&minus;</button><input type="number" id="qty-cookie-peanut-butter" name="qty-cookie-peanut-butter" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Peanut Butter">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Peanut Butter">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cookie-sugar" data-name="Sugar" data-noun="cookies" data-each="2.5" data-dozen="25">
+                <div class="item-info"><label class="item-name" for="qty-cookie-sugar">Sugar</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Sugar">&minus;</button><input type="number" id="qty-cookie-sugar" name="qty-cookie-sugar" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Sugar">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Sugar">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cookie-oatmeal-raisin" data-name="Oatmeal Raisin" data-noun="cookies" data-each="2.5" data-dozen="25">
+                <div class="item-info"><label class="item-name" for="qty-cookie-oatmeal-raisin">Oatmeal Raisin</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Oatmeal Raisin">&minus;</button><input type="number" id="qty-cookie-oatmeal-raisin" name="qty-cookie-oatmeal-raisin" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Oatmeal Raisin">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Oatmeal Raisin">+ 1 dozen</button>
+              </div>
             </div>
           </fieldset>
 
@@ -319,37 +380,106 @@
             <legend>Cupcakes</legend>
             <p class="cat-price"><strong>$3.50</strong> each · <strong>$35</strong> per dozen (12). Same price for every flavor.</p>
             <div class="item-list">
-              <div class="item-row" data-key="cupcake-hot-milk" data-name="Hot Milk" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
-              <div class="item-row" data-key="cupcake-yellow" data-name="Yellow" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
-              <div class="item-row" data-key="cupcake-strawberry" data-name="Strawberry" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
-              <div class="item-row" data-key="cupcake-vanilla" data-name="Vanilla" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
-              <div class="item-row" data-key="cupcake-chocolate" data-name="Chocolate" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
-              <div class="item-row" data-key="cupcake-oreo" data-name="Oreo" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
-              <div class="item-row" data-key="cupcake-lemon" data-name="Lemon" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
-              <div class="item-row" data-key="cupcake-7up" data-name="7Up" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
-              <div class="item-row" data-key="cupcake-pineapple" data-name="Pineapple Upside Down" data-noun="cupcakes" data-each="3.5" data-dozen="35"></div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-hot-milk" data-name="Hot Milk" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-hot-milk">Hot Milk</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Hot Milk">&minus;</button><input type="number" id="qty-cupcake-hot-milk" name="qty-cupcake-hot-milk" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Hot Milk">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Hot Milk">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-yellow" data-name="Yellow" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-yellow">Yellow</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Yellow">&minus;</button><input type="number" id="qty-cupcake-yellow" name="qty-cupcake-yellow" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Yellow">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Yellow">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-strawberry" data-name="Strawberry" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-strawberry">Strawberry</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Strawberry">&minus;</button><input type="number" id="qty-cupcake-strawberry" name="qty-cupcake-strawberry" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Strawberry">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Strawberry">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-vanilla" data-name="Vanilla" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-vanilla">Vanilla</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Vanilla">&minus;</button><input type="number" id="qty-cupcake-vanilla" name="qty-cupcake-vanilla" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Vanilla">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Vanilla">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-chocolate" data-name="Chocolate" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-chocolate">Chocolate</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Chocolate">&minus;</button><input type="number" id="qty-cupcake-chocolate" name="qty-cupcake-chocolate" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Chocolate">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Chocolate">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-oreo" data-name="Oreo" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-oreo">Oreo</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Oreo">&minus;</button><input type="number" id="qty-cupcake-oreo" name="qty-cupcake-oreo" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Oreo">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Oreo">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-lemon" data-name="Lemon" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-lemon">Lemon</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Lemon">&minus;</button><input type="number" id="qty-cupcake-lemon" name="qty-cupcake-lemon" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Lemon">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Lemon">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-7up" data-name="7Up" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-7up">7Up</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less 7Up">&minus;</button><input type="number" id="qty-cupcake-7up" name="qty-cupcake-7up" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more 7Up">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen 7Up">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="cupcake-pineapple" data-name="Pineapple Upside Down" data-noun="cupcakes" data-each="3.5" data-dozen="35">
+                <div class="item-info"><label class="item-name" for="qty-cupcake-pineapple">Pineapple Upside Down</label></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Pineapple Upside Down">&minus;</button><input type="number" id="qty-cupcake-pineapple" name="qty-cupcake-pineapple" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Pineapple Upside Down">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Pineapple Upside Down">+ 1 dozen</button>
+              </div>
             </div>
           </fieldset>
 
           <fieldset class="card menu-cat" data-cat="cake">
             <legend>Cakes</legend>
             <div class="item-list">
-              <div class="item-row" data-key="cake-8in" data-name="8&quot; Two-Layer Cake" data-price="40" data-details="layer" data-desc="Round, heart, or pumpkin shape. A Thanksgiving centerpiece in any of our cake flavors. Flavors: Hot Milk, Yellow, Strawberry, Vanilla, Chocolate, Oreo, Lemon, 7Up, Pineapple Upside Down."></div>
-              <div class="item-row" data-key="cake-9x13" data-name="9x13 Cake" data-price="35"></div>
-              <div class="item-row" data-key="cake-bundt-7up" data-name="7Up Bundt Cake" data-price="35"></div>
-              <div class="item-row" data-key="cake-bundt-lemon" data-name="Lemon Bundt Cake" data-price="35"></div>
-              <div class="item-row" data-key="cake-bundt-pineapple" data-name="Pineapple Upside Down Bundt Cake" data-price="35"></div>
+              <div data-static="1" class="item-row" data-key="cake-8in" data-name="8&quot; Two-Layer Cake" data-price="40" data-details="layer" data-desc="Round, heart, or pumpkin shape. A Thanksgiving centerpiece in any of our cake flavors. Flavors: Hot Milk, Yellow, Strawberry, Vanilla, Chocolate, Oreo, Lemon, 7Up, Pineapple Upside Down.">
+                <div class="item-info"><label class="item-name" for="qty-cake-8in">8&quot; Two-Layer Cake</label><span class="item-price">$40</span><span class="item-desc">Round, heart, or pumpkin shape. A Thanksgiving centerpiece in any of our cake flavors. Flavors: Hot Milk, Yellow, Strawberry, Vanilla, Chocolate, Oreo, Lemon, 7Up, Pineapple Upside Down.</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less 8&quot; Two-Layer Cake">&minus;</button><input type="number" id="qty-cake-8in" name="qty-cake-8in" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more 8&quot; Two-Layer Cake">+</button></div>
+                <div class="item-details" data-details-box></div>
+              </div>
+              <div data-static="1" class="item-row" data-key="cake-9x13" data-name="9x13 Cake" data-price="35">
+                <div class="item-info"><label class="item-name" for="qty-cake-9x13">9x13 Cake</label><span class="item-price">$35</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less 9x13 Cake">&minus;</button><input type="number" id="qty-cake-9x13" name="qty-cake-9x13" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more 9x13 Cake">+</button></div>
+              </div>
+              <div data-static="1" class="item-row" data-key="cake-bundt-7up" data-name="7Up Bundt Cake" data-price="35">
+                <div class="item-info"><label class="item-name" for="qty-cake-bundt-7up">7Up Bundt Cake</label><span class="item-price">$35</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less 7Up Bundt Cake">&minus;</button><input type="number" id="qty-cake-bundt-7up" name="qty-cake-bundt-7up" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more 7Up Bundt Cake">+</button></div>
+              </div>
+              <div data-static="1" class="item-row" data-key="cake-bundt-lemon" data-name="Lemon Bundt Cake" data-price="35">
+                <div class="item-info"><label class="item-name" for="qty-cake-bundt-lemon">Lemon Bundt Cake</label><span class="item-price">$35</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Lemon Bundt Cake">&minus;</button><input type="number" id="qty-cake-bundt-lemon" name="qty-cake-bundt-lemon" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Lemon Bundt Cake">+</button></div>
+              </div>
+              <div data-static="1" class="item-row" data-key="cake-bundt-pineapple" data-name="Pineapple Upside Down Bundt Cake" data-price="35">
+                <div class="item-info"><label class="item-name" for="qty-cake-bundt-pineapple">Pineapple Upside Down Bundt Cake</label><span class="item-price">$35</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Pineapple Upside Down Bundt Cake">&minus;</button><input type="number" id="qty-cake-bundt-pineapple" name="qty-cake-bundt-pineapple" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Pineapple Upside Down Bundt Cake">+</button></div>
+              </div>
             </div>
           </fieldset>
 
           <fieldset class="card menu-cat" data-cat="other">
             <legend>Other Sweets</legend>
             <div class="item-list">
-              <div class="item-row" data-key="brownie-nuts" data-name="Brownies with nuts" data-noun="brownies" data-each="2.5" data-dozen="30" data-desc="$2.50 each · $30 per dozen"></div>
-              <div class="item-row" data-key="brownie-nonuts" data-name="Brownies without nuts" data-noun="brownies" data-each="2.5" data-dozen="30" data-desc="$2.50 each · $30 per dozen"></div>
-              <div class="item-row" data-key="pie-cold-mint" data-name="Cold Mint Pie (whole 9&quot;)" data-price="30"></div>
-              <div class="item-row" data-key="fudge-nuts" data-name="Fudge with nuts" data-unpriced="1"></div>
-              <div class="item-row" data-key="fudge-nonuts" data-name="Fudge without nuts" data-unpriced="1"></div>
+              <div data-static="1" class="item-row has-dozen" data-key="brownie-nuts" data-name="Brownies with nuts" data-noun="brownies" data-each="2.5" data-dozen="30" data-desc="$2.50 each · $30 per dozen">
+                <div class="item-info"><label class="item-name" for="qty-brownie-nuts">Brownies with nuts</label><span class="item-desc">$2.50 each · $30 per dozen</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Brownies with nuts">&minus;</button><input type="number" id="qty-brownie-nuts" name="qty-brownie-nuts" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Brownies with nuts">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Brownies with nuts">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row has-dozen" data-key="brownie-nonuts" data-name="Brownies without nuts" data-noun="brownies" data-each="2.5" data-dozen="30" data-desc="$2.50 each · $30 per dozen">
+                <div class="item-info"><label class="item-name" for="qty-brownie-nonuts">Brownies without nuts</label><span class="item-desc">$2.50 each · $30 per dozen</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Brownies without nuts">&minus;</button><input type="number" id="qty-brownie-nonuts" name="qty-brownie-nonuts" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Brownies without nuts">+</button></div>
+                <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Brownies without nuts">+ 1 dozen</button>
+              </div>
+              <div data-static="1" class="item-row" data-key="pie-cold-mint" data-name="Cold Mint Pie (whole 9&quot;)" data-price="30">
+                <div class="item-info"><label class="item-name" for="qty-pie-cold-mint">Cold Mint Pie (whole 9&quot;)</label><span class="item-price">$30</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Cold Mint Pie (whole 9&quot;)">&minus;</button><input type="number" id="qty-pie-cold-mint" name="qty-pie-cold-mint" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Cold Mint Pie (whole 9&quot;)">+</button></div>
+              </div>
+              <div data-static="1" class="item-row" data-key="fudge-nuts" data-name="Fudge with nuts" data-unpriced="1">
+                <div class="item-info"><label class="item-name" for="qty-fudge-nuts">Fudge with nuts</label><span class="item-price">Ask for pricing</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Fudge with nuts">&minus;</button><input type="number" id="qty-fudge-nuts" name="qty-fudge-nuts" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Fudge with nuts">+</button></div>
+              </div>
+              <div data-static="1" class="item-row" data-key="fudge-nonuts" data-name="Fudge without nuts" data-unpriced="1">
+                <div class="item-info"><label class="item-name" for="qty-fudge-nonuts">Fudge without nuts</label><span class="item-price">Ask for pricing</span></div>
+                <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Fudge without nuts">&minus;</button><input type="number" id="qty-fudge-nonuts" name="qty-fudge-nonuts" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Fudge without nuts">+</button></div>
+              </div>
             </div>
           </fieldset>
 
@@ -374,7 +504,7 @@
           </fieldset>
         </div>
 
-        <p class="menu-pdf"><a class="btn btn-ghost" href="menu-holiday.pdf" download="SweetWalks-holiday-menu.pdf">Download the printable menu (PDF)</a></p>
+        <p class="menu-pdf"><a class="btn btn-ghost" href="menu-holiday.pdf?v=1121g" download="SweetWalks-holiday-menu.pdf">Download the printable menu (PDF)</a></p>
       </div>
     </section>
 
@@ -561,8 +691,8 @@
           <article class="pay-card">
             <h3>Zelle</h3>
             <p class="pay-handle">(510) 467-5309</p>
-            <p class="hint">Name shows as CHANCE. Scan in your bank's app.</p>
-            <img src="images/pay/zelle.png" width="200" height="200" loading="lazy" alt="Zelle QR code for SweetWalks, name CHANCE">
+            <p class="hint">Name shows as CHANCE (Chance Walker, co-owner). Scan in your bank's app.</p>
+            <img src="images/pay/zelle.png" width="200" height="200" loading="lazy" alt="Zelle QR code for SweetWalks, name CHANCE (Chance Walker, co-owner)">
           </article>
           <article class="pay-card">
             <h3>PayPal</h3>
@@ -598,7 +728,7 @@
           </details>
           <details class="faq-item">
             <summary>How far ahead should I order?</summary>
-            <p>It depends on the order and the date. Holiday dates fill up fast. Orders needed within 72 hours are paid in full. Call or text us at <a href="tel:+19167209564">(916) 720-9564</a> and we'll work it out with you.</p>
+            <p>It depends on the order and the date. Holiday dates fill up fast. Orders under $50 or needed within 72 hours are paid in full. Call or text us at <a href="tel:+19167209564">(916) 720-9564</a> and we'll work it out with you.</p>
           </details>
           <details class="faq-item">
             <summary>Do you make custom cakes?</summary>
@@ -736,6 +866,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1121f"></script>
+  <script src="script.js?v=1121g"></script>
 </body>
 </html>

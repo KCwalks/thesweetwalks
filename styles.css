@@ -1933,3 +1933,34 @@ body::before { background: linear-gradient(90deg, #a03651, #e36c8a 35%, #abd2bf 
   .menu-cat.card { padding-left: 0.75rem; padding-right: 0.75rem; }
 }
 .item-name { overflow-wrap: anywhere; hyphens: auto; }
+
+/* Christmas promo banner (shown by script from Monday, November 23, 2026) */
+.promo-xmas { display: none; }
+html.xmas-on .promo-xmas { display: block; }
+html.promo-hidden .promo-xmas { display: none; }
+
+/* Shown until script.js loads; stays if the script fails (old iPad, slow connection). */
+.js-fallback {
+  background: #fff;
+  border: 2px solid var(--burgundy);
+  border-radius: 0.9rem;
+  padding: 0.9rem 1rem;
+  margin: 0 0 1rem;
+}
+.js-fallback p { margin: 0 0 0.6rem; }
+.js-fallback-actions { margin: 0 !important; }
+.js-fallback-actions .btn { margin: 0.25rem 0.4rem 0.25rem 0; }
+html.sw-ready .js-fallback { display: none; }
+.js-fallback-note { font-size: 1.15rem; color: var(--burgundy); text-align: center; }
+
+/* Old iPads (iOS 12 to 14.0): no flexbox gap, so space things with margins */
+html.no-flexgap .stepper > * + * { margin-left: 0.35rem; }
+html.no-flexgap .cart-right > * + * { margin-left: 0.6rem; }
+html.no-flexgap .hero-actions > * { margin: 0.3rem; }
+html.no-flexgap .contact-buttons > * { margin: 0.3rem; }
+html.no-flexgap .fail-actions > * { margin: 0.3rem; }
+html.no-flexgap .reorder-actions > * { margin: 0.3rem; }
+html.no-flexgap .promo-inner > * { margin: 0.2rem 0.5rem; }
+html.no-flexgap .order-form label > * + * { margin-top: 0.3rem; }
+html.no-flexgap .item-info > * + * { margin-top: 0.1rem; }
+html.no-flexgap .email-chooser-options > * + * { margin-top: 0.6rem; }

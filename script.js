@@ -37,7 +37,15 @@
 
   // ---- Build a stepper in every menu item row ----
   var rows = Array.prototype.slice.call(form.querySelectorAll(".item-row"));
+  // The menu rows are already written in index.html (so they show even if
+  // this script never runs). Only build a row here if it is still empty.
   rows.forEach(function (row) {
+    var dozenAttr = parseFloat(row.getAttribute("data-dozen"));
+    if (row.querySelector(".qty")) {
+      if (isNaN(dozenAttr)) row.classList.remove("has-dozen"); else row.classList.add("has-dozen");
+      if (isNaN(parseFloat(row.getAttribute("data-each")))) row.removeAttribute("data-each");
+      return;
+    }
     var name = row.getAttribute("data-name");
     var each = parseFloat(row.getAttribute("data-each"));
     var dozen = parseFloat(row.getAttribute("data-dozen"));
@@ -56,7 +64,7 @@
       "</div>" +
       (!isNaN(dozen) ? '<button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen ' + esc(name) + '">+ 1 dozen</button>' : "") +
       (row.getAttribute("data-details") === "layer" ? '<div class="item-details" data-details-box></div>' : "");
-    row.classList.toggle("has-dozen", !isNaN(dozen));
+    if (isNaN(dozen)) row.classList.remove("has-dozen"); else row.classList.add("has-dozen");
     if (isNaN(each)) row.removeAttribute("data-each");
   });
 
@@ -844,45 +852,45 @@
 })();
 
 
-// Hide Thanksgiving cutoff after Sunday, Nov 22, 2026, 11:59 PM Pacific.
-// The message stays visible if JavaScript is off.
+// Holiday banners (times are fixed instants, so they work in any time zone):
+// - Thanksgiving banner and cutoff line hide after Sunday, November 22, 2026, 11:59:59 PM Pacific.
+// - Christmas banner shows from Monday, November 23, 2026, 12:00 AM Pacific
+//   through Thursday, December 24, 2026, 11:59:59 PM Pacific.
+// Without JavaScript the Thanksgiving banner and the deadlines list stay visible.
 (function () {
-  function pastCutoff() {
-    try {
-      var parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/Los_Angeles",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hourCycle: "h23"
-      }).formatToParts(new Date());
-      var g = {};
-      parts.forEach(function (p) { g[p.type] = p.value; });
-      return (g.year + g.month + g.day + g.hour + g.minute + g.second) > "20261122235959";
-    } catch (e) {
-      return Date.now() > Date.parse("2026-11-22T23:59:59-08:00");
-    }
+  var root = document.documentElement;
+  var now = new Date().getTime();
+  var XMAS_START = Date.UTC(2026, 10, 23, 8, 0, 0);
+  var XMAS_END = Date.UTC(2026, 11, 25, 8, 0, 0);
+  var key = "sw-promo-dismissed-2026-thanks";
+  var thanks = document.querySelector("[data-thanks-cutoff-banner]");
+  var xmas = document.querySelector("[data-xmas-banner]");
+  function addClass(c) { if (!root.classList.contains(c)) root.classList.add(c); }
+  if (now >= XMAS_START) {
+    key = "sw-promo-dismissed-2026-xmas";
+    addClass("thanks-cutoff-passed");
+    var nodes = document.querySelectorAll("[data-thanks-cutoff], [data-thanks-cutoff-banner]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].hidden = true;
   }
-  if (!pastCutoff()) return;
-  document.documentElement.classList.add("promo-hidden", "thanks-cutoff-passed");
-  var nodes = document.querySelectorAll("[data-thanks-cutoff], [data-thanks-cutoff-banner]");
-  for (var i = 0; i < nodes.length; i++) nodes[i].hidden = true;
+  if (now >= XMAS_START && now < XMAS_END) addClass("xmas-on");
+  if (now >= XMAS_END) addClass("promo-hidden");
+  var active = now >= XMAS_START ? xmas : thanks;
+  try { if (window.sessionStorage && sessionStorage.getItem(key)) addClass("promo-hidden"); } catch (e) {}
+  var btns = document.querySelectorAll("[data-promo-dismiss]");
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].addEventListener("click", function () {
+      if (active) active.hidden = true;
+      addClass("promo-hidden");
+      try { sessionStorage.setItem(key, "1"); } catch (e) {}
+    });
+  }
 })();
 
-// Holiday promo banner dismiss (same visit only)
+
+// The order form script loaded: hide the "buttons don't work? call or text" note.
 (function () {
-  var banner = document.querySelector("[data-promo-banner]");
-  var btn = document.querySelector("[data-promo-dismiss]");
-  if (!banner || !btn) return;
-  try { if (sessionStorage.getItem("sw-promo-dismissed-2026-thanks")) banner.hidden = true; } catch (e) {}
-  btn.addEventListener("click", function () {
-    banner.hidden = true;
-    document.documentElement.classList.add("promo-hidden");
-    try { sessionStorage.setItem("sw-promo-dismissed-2026-thanks", "1"); } catch (e) {}
-  });
+  if (!document.getElementById("order-form") || !document.querySelector(".item-row .qty")) return;
+  document.documentElement.classList.add("sw-ready");
 })();
 
 
