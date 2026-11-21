@@ -1,230 +1,170 @@
 (function () {
   "use strict";
 
-  var CAKE_FLAVORS = [
-    "Hot Milk",
-    "Yellow",
-    "Strawberry",
-    "Vanilla",
-    "Chocolate",
-    "Oreo",
-    "Lemon",
-    "7Up",
-    "Pineapple Upside Down"
-  ];
-  var BUNDT_FLAVORS = ["7Up", "Lemon", "Pineapple Upside Down"];
-
-  var PRICES = {
-    cookie: { each: 2.5, dozen: 25 },
-    cupcake: { each: 3.5, dozen: 35 },
-    '8" Two-Layer Cake': 40,
-    "9x13 Cake": 35,
-    "Bundt Cake": 35,
-    Brownies: { each: 2.5, dozen: 30 },
-    "Cold Mint Pie": 30
-  };
-
   var form = document.getElementById("order-form");
   if (!form) return;
-  var cart = [];
 
-  function fillFlavorSelect(select, flavors) {
-    var current = select.value;
-    select.innerHTML = "";
-    var first = document.createElement("option");
-    first.value = "";
-    first.textContent = "Choose a flavor";
-    select.appendChild(first);
-    flavors.forEach(function (name) {
-      var opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
-      select.appendChild(opt);
-    });
-    if (flavors.indexOf(current) !== -1) select.value = current;
+  // FormSubmit sends every order to the business inbox, with a CC copy.
+  var ORDER_ENDPOINT = "https://formsubmit.co/ajax/KCwalks@thesweetwalks.com";
+  var ORDER_CC = "chancewalkk01@gmail.com";
+  // Optional backup log: paste the Google Apps Script web app URL here
+  // (see order-log-apps-script.gs). Leave empty to turn it off.
+  var SHEET_URL = "";
+  var PHONE_DISPLAY = "(916) 720-9564";
+  var PHONE_SMS = "sms:+19167209564";
+  var PICKUP_VALUE = "Pickup at 2801 Arden Way, Sacramento";
+  var DELIVERY_MIN = 25;
+  var CAKE_SHAPES = ["Round", "Heart", "Pumpkin"];
+  var CAKE_FLAVORS = ["Hot Milk", "Yellow", "Strawberry", "Vanilla", "Chocolate", "Oreo", "Lemon", "7Up", "Pineapple Upside Down"];
+  var MAX_QTY = 240;
+
+  function money(n) { return "$" + n.toFixed(2).replace(/\.00$/, ""); }
+  function val(n) { return (form.elements[n] && form.elements[n].value || "").trim(); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---- Dates spelled out: "Sunday, November 22, 2026" ----
+  function parseISO(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || "");
+    if (!m) return null;
+    var d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return isNaN(d) ? null : d;
+  }
+  function spellDate(v) {
+    var d = parseISO(v);
+    if (!d) return v || "";
+    return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   }
 
-  function updateRow(row) {
-    var type = row.getAttribute("data-item");
-    var flavor = row.querySelector('[data-field="flavor"]');
-    var nuts = row.querySelector("[data-nuts]");
-    var shape = row.querySelector("[data-shape]");
-    var cakeFlavor = row.querySelector("[data-cake-flavor]");
-    var otherUnit = row.querySelector("[data-other-unit]");
-    var typeSelect = row.querySelector('[data-field="type"]');
-    var typeVal = typeSelect ? typeSelect.value : "";
+  // ---- Build a stepper in every menu item row ----
+  var rows = Array.prototype.slice.call(form.querySelectorAll(".item-row"));
+  rows.forEach(function (row) {
+    var name = row.getAttribute("data-name");
+    var each = parseFloat(row.getAttribute("data-each"));
+    var dozen = parseFloat(row.getAttribute("data-dozen"));
+    var price = parseFloat(row.getAttribute("data-price"));
+    var desc = row.getAttribute("data-desc");
+    var priceText = row.hasAttribute("data-unpriced") ? "Ask for pricing" : (!isNaN(price) ? money(price) : "");
+    var id = "qty-" + row.getAttribute("data-key");
+    row.innerHTML =
+      '<div class="item-info"><label class="item-name" for="' + id + '">' + esc(name) + "</label>" +
+      (priceText ? '<span class="item-price">' + priceText + "</span>" : "") +
+      (desc ? '<span class="item-desc">' + esc(desc) + "</span>" : "") + "</div>" +
+      '<div class="stepper">' +
+      '<button type="button" class="step" data-step="-1" aria-label="One less ' + esc(name) + '">&minus;</button>' +
+      '<input type="number" id="' + id + '" name="' + id + '" class="qty" value="0" min="0" max="' + MAX_QTY + '" step="1" inputmode="numeric" autocomplete="off">' +
+      '<button type="button" class="step" data-step="1" aria-label="One more ' + esc(name) + '">+</button>' +
+      "</div>" +
+      (!isNaN(dozen) ? '<button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen ' + esc(name) + '">+ 1 dozen</button>' : "") +
+      (row.getAttribute("data-details") === "layer" ? '<div class="item-details" data-details-box></div>' : "");
+    row.classList.toggle("has-dozen", !isNaN(dozen));
+    if (isNaN(each)) row.removeAttribute("data-each");
+  });
 
-    if (type === "cookie") {
-      var showNuts = flavor && flavor.value === "Chocolate Chip";
-      if (nuts) nuts.hidden = !showNuts;
-      if (!showNuts && nuts) {
-        var nsel = nuts.querySelector("select");
-        if (nsel) nsel.value = "";
-      }
-    }
-
-    if (type === "cake") {
-      var isLayer = typeVal.indexOf("Two-Layer") !== -1;
-      var isBundt = typeVal === "Bundt Cake";
-      if (shape) shape.hidden = !isLayer;
-      if (!isLayer && shape) {
-        var ssel = shape.querySelector("select");
-        if (ssel) ssel.value = "";
-      }
-      if (cakeFlavor) {
-        cakeFlavor.hidden = !(isLayer || isBundt);
-        var fsel = cakeFlavor.querySelector("select");
-        if (fsel) {
-          if (isLayer) fillFlavorSelect(fsel, CAKE_FLAVORS);
-          else if (isBundt) fillFlavorSelect(fsel, BUNDT_FLAVORS);
-          else {
-            fsel.value = "";
-          }
-        }
-      }
-    }
-
-    if (type === "other") {
-      var needsNuts = typeVal === "Brownies" || typeVal === "Fudge";
-      var needsUnit = typeVal === "Brownies";
-      if (nuts) nuts.hidden = !needsNuts;
-      if (!needsNuts && nuts) {
-        var onsel = nuts.querySelector("select");
-        if (onsel) onsel.value = "";
-      }
-      if (otherUnit) otherUnit.hidden = !needsUnit;
-      if (!needsUnit && otherUnit) {
-        var usel = otherUnit.querySelector("select");
-        if (usel) usel.value = "each";
-      }
-    }
+  function qtyOf(row) {
+    var n = parseInt(row.querySelector(".qty").value, 10);
+    return isNaN(n) || n < 0 ? 0 : Math.min(n, MAX_QTY);
+  }
+  function setQty(row, n) {
+    n = Math.max(0, Math.min(MAX_QTY, n | 0));
+    row.querySelector(".qty").value = String(n);
+    syncRow(row);
   }
 
-  function uniqueName(base) {
-    return base + "-" + Math.random().toString(36).slice(2, 8);
+  function selectHtml(cls, label, options, current) {
+    return '<label class="detail-field"><span>' + label + ' <span class="req">*</span></span><select class="' + cls + '">' +
+      '<option value="">Choose</option>' +
+      options.map(function (o) { return '<option value="' + esc(o) + '"' + (o === current ? " selected" : "") + ">" + esc(o) + "</option>"; }).join("") +
+      "</select></label>";
   }
 
-  function addRow(fieldset) {
-    var rows = fieldset.querySelector("[data-rows]");
-    var first = rows.querySelector(".order-row");
-    var clone = first.cloneNode(true);
-    clone.querySelectorAll("select, input, textarea").forEach(function (el) {
-      if (el.type === "number" || el.tagName === "TEXTAREA") el.value = "";
-      else el.value = el.options && el.options.length ? "" : el.value;
-      if (el.name) el.name = uniqueName(el.name.replace(/-[a-z0-9]{6}$/, ""));
-    });
-    var remove = clone.querySelector("[data-remove]");
-    if (remove) remove.hidden = false;
-    rows.appendChild(clone);
-    updateRow(clone);
-    var firstInput = clone.querySelector("select, input");
-    if (firstInput) firstInput.focus();
+  // 8" cakes: one shape and flavor choice per cake
+  function syncDetails(row) {
+    var box = row.querySelector("[data-details-box]");
+    if (!box) return;
+    var n = Math.min(qtyOf(row), 20);
+    var lines = box.querySelectorAll(".detail-line");
+    for (var i = lines.length; i < n; i++) {
+      var div = document.createElement("div");
+      div.className = "detail-line";
+      div.innerHTML = '<p class="detail-title">Cake ' + (i + 1) + "</p>" + selectHtml("d-shape", "Shape", CAKE_SHAPES, "") + selectHtml("d-flavor", "Flavor", CAKE_FLAVORS, "");
+      box.appendChild(div);
+    }
+    for (var j = lines.length - 1; j >= n; j--) box.removeChild(lines[j]);
+  }
+
+  function syncRow(row) {
+    row.classList.toggle("is-picked", qtyOf(row) > 0);
+    syncDetails(row);
     updateEstimate();
   }
 
-  function money(n) {
-    return "$" + n.toFixed(2).replace(/\.00$/, "");
+  function piecesText(n, noun, name) {
+    var dz = Math.floor(n / 12), single = n % 12;
+    var count = n === 12 ? "1 dozen" : (n % 12 === 0 ? (n / 12) + " dozen" : String(n));
+    var extra = dz && single ? " (" + dz + " dozen + " + single + ")" : "";
+    if (/^Brownies/.test(name)) return count + " " + name.replace(/^Brownies/, "brownies") + extra;
+    var m = / (with|without) nuts$/.exec(name);
+    if (m) return count + " " + name.slice(0, m.index) + " " + noun + " " + m[0].trim() + extra;
+    return count + " " + name + " " + noun + extra;
   }
 
-  function rowDescription(row) {
-    var type = row.getAttribute("data-item");
-    var get = function (field) {
-      var el = row.querySelector('[data-field="' + field + '"]');
-      return el ? el.value.trim() : "";
-    };
-    var qty = parseInt(get("qty"), 10);
-    if (!qty) return null;
-
-    var unit = get("unit") || "each";
-    var flavor = get("flavor");
-    var nuts = get("nuts");
-    var shape = get("shape");
-    var typ = get("type");
-    var parts = [];
-    var lineTotal = null;
-    var priced = true;
-
-    if (type === "cookie") {
-      if (!flavor) return null;
-      var cookieQty = unit === "dozen" ? (qty === 1 ? "1 dozen" : qty + " dozen") : String(qty);
-      parts = [cookieQty, flavor, "cookies"];
-      if (nuts) parts.push("(" + nuts + ")");
-      var p = PRICES.cookie[unit];
-      if (p) lineTotal = p * qty;
-    } else if (type === "cupcake") {
-      if (!flavor) return null;
-      var cupQty = unit === "dozen" ? (qty === 1 ? "1 dozen" : qty + " dozen") : String(qty);
-      parts = [cupQty, flavor, "cupcakes"];
-      var cp = PRICES.cupcake[unit];
-      if (cp) lineTotal = cp * qty;
-    } else if (type === "cake") {
-      if (!typ) return null;
-      parts = [qty > 1 ? String(qty) : "1", typ];
-      if (shape) parts.push("(" + shape + ")");
-      if (flavor) parts.push("(" + flavor + ")");
-      if (PRICES[typ]) lineTotal = PRICES[typ] * qty;
-    } else if (type === "other") {
-      if (!typ) return null;
-      if (typ === "Brownies") {
-        var bQty = unit === "dozen" ? (qty === 1 ? "1 dozen" : qty + " dozen") : String(qty);
-        parts = [bQty, "brownies"];
-        if (nuts) parts.push("(" + nuts + ")");
-        var bp = PRICES.Brownies[unit];
-        if (bp) lineTotal = bp * qty;
-      } else if (typ.indexOf("Cold Mint Pie") === 0) {
-        parts = [String(qty), "Cold Mint Pie (whole 9\")"];
-        lineTotal = PRICES["Cold Mint Pie"] * qty;
-      } else if (typ === "Fudge") {
-        parts = [String(qty), "fudge"];
-        if (nuts) parts.push("(" + nuts + ")");
-        priced = false;
+  // Items in the order, read straight from the number boxes (no "Add" step).
+  function cartItems() {
+    var items = [];
+    rows.forEach(function (row) {
+      var n = qtyOf(row);
+      if (!n) return;
+      var name = row.getAttribute("data-name");
+      var each = parseFloat(row.getAttribute("data-each"));
+      var dozen = parseFloat(row.getAttribute("data-dozen"));
+      var price = parseFloat(row.getAttribute("data-price"));
+      var item = { key: row.getAttribute("data-key"), qty: n, priced: true, total: null, details: [] };
+      if (!isNaN(each) && !isNaN(dozen)) {
+        item.text = piecesText(n, row.getAttribute("data-noun"), name);
+        item.total = Math.floor(n / 12) * dozen + (n % 12) * each;
+      } else if (!isNaN(price)) {
+        item.text = name + ", quantity " + n;
+        item.total = price * n;
+      } else {
+        item.text = name + ", quantity " + n;
+        item.priced = false;
       }
-    }
-
-    if (!parts.length) return null;
-    return {
-      text: parts.join(" "),
-      total: lineTotal,
-      priced: priced,
-      kind: type,
-      fields: {
-        flavor: flavor,
-        nuts: nuts,
-        shape: shape,
-        type: typ,
-        qty: String(qty),
-        unit: unit
+      var box = row.querySelector("[data-details-box]");
+      if (box) {
+        var parts = [];
+        box.querySelectorAll(".detail-line").forEach(function (line, i) {
+          var shape = line.querySelector(".d-shape").value, flavor = line.querySelector(".d-flavor").value;
+          item.details.push({ shape: shape, flavor: flavor });
+          parts.push("cake " + (i + 1) + ": " + (shape || "shape not chosen") + ", " + (flavor || "flavor not chosen"));
+        });
+        if (parts.length) item.text += " (" + parts.join("; ") + ")";
       }
-    };
+      items.push(item);
+    });
+    return items;
   }
 
   function updateEstimate() {
     var list = document.getElementById("estimate-lines");
     var totalEl = document.getElementById("estimate-total");
     var empty = document.getElementById("cart-empty");
-    if (!list || !totalEl) return;
+    var items = cartItems();
     list.innerHTML = "";
-    if (empty) empty.hidden = cart.length > 0;
-    var sum = 0;
-    var hasUnpriced = false;
-    cart.forEach(function (item, idx) {
+    empty.hidden = items.length > 0;
+    var sum = 0, unpriced = false;
+    items.forEach(function (item) {
       var li = document.createElement("li");
       var left = document.createElement("span");
       left.textContent = item.text;
       var right = document.createElement("span");
       right.className = "cart-right";
       var price = document.createElement("span");
-      if (item.priced && item.total != null) {
-        price.textContent = money(item.total);
-        sum += item.total;
-      } else {
-        price.textContent = "Priced when you order";
-        hasUnpriced = true;
-      }
+      if (item.priced && item.total != null) { price.textContent = money(item.total); sum += item.total; }
+      else { price.textContent = "Priced when you order"; unpriced = true; }
       var rm = document.createElement("button");
       rm.type = "button";
       rm.className = "cart-remove";
-      rm.setAttribute("data-cart-remove", idx);
+      rm.setAttribute("data-cart-remove", item.key);
       rm.setAttribute("aria-label", "Remove " + item.text);
       rm.textContent = "Remove";
       right.appendChild(price);
@@ -233,171 +173,334 @@
       li.appendChild(right);
       list.appendChild(li);
     });
-    totalEl.hidden = cart.length === 0;
-    totalEl.textContent = hasUnpriced
-      ? "Estimated total: " + money(sum) + ", plus items priced when you order"
-      : "Estimated total: " + money(sum);
+    totalEl.hidden = items.length === 0;
+    totalEl.textContent = "Estimated total: " + money(sum) + (unpriced ? ", plus items priced when you order" : "");
     var fb = document.querySelector("[data-float-order]");
-    if (fb) fb.textContent = cart.length ? "Your order (" + cart.length + ")" : "Order Now";
-    checkMinimum();
+    if (fb) {
+      var count = items.reduce(function (a, i) { return a + i.qty; }, 0);
+      fb.textContent = items.length ? "Finish my order (" + count + ")" : "Order Now";
+      fb.setAttribute("href", items.length ? "#order" : "#menu");
+    }
+    checkMinimum(items);
+    return items;
   }
 
-  // Delivery orders need a $25 minimum (menu prices, delivery fee not counted).
-  // Single cookies are pickup only. Friendly heads-up only, it never blocks sending.
-  var DELIVERY_MIN = 25;
-  function checkMinimum() {
+  // $25 delivery minimum: friendly heads-up only, never blocks sending.
+  function checkMinimum(items) {
     var note = form.querySelector("[data-min-note]");
     if (!note) return;
-    var selected = form.querySelector('input[name="fulfillment"]:checked');
-    var v = selected && selected.value;
+    var v = (form.querySelector('input[name="fulfillment"]:checked') || {}).value;
     var show = false;
-    if (v === "Delivery" && cart.length) {
-      var subtotal = 0;
-      var hasUnpriced = false;
-      cart.forEach(function (item) {
-        if (item.priced && item.total != null) subtotal += item.total;
-        else hasUnpriced = true;
-      });
-      show = !hasUnpriced && subtotal < DELIVERY_MIN;
+    if (v === "Delivery" && items.length) {
+      var sub = 0, unpriced = false;
+      items.forEach(function (i) { if (i.priced && i.total != null) sub += i.total; else unpriced = true; });
+      show = !unpriced && sub < DELIVERY_MIN;
     }
     note.hidden = !show;
   }
 
-  function resetRow(row) {
-    row.querySelectorAll("select, input").forEach(function (el) {
-      if (el.getAttribute("data-field") === "qty") el.value = "1";
-      else if (el.getAttribute("data-field") === "unit") el.value = "each";
-      else if (el.tagName === "SELECT") el.value = "";
-    });
-    updateRow(row);
-  }
-
-  function addRowToCart(row) {
-    var desc = rowDescription(row);
-    if (!desc) return null;
-    cart.push(desc);
-    resetRow(row);
-    return desc;
-  }
-
   form.addEventListener("click", function (e) {
-    var addBtn = e.target.closest("[data-add-to-order]");
-    if (addBtn) {
-      var fs = addBtn.closest("fieldset");
-      var msg = fs.querySelector("[data-add-msg]");
-      var added = 0, last = null, failed = false;
-      fs.querySelectorAll(".order-row").forEach(function (row) {
-        var d = addRowToCart(row);
-        if (d) { added++; last = d; } else failed = true;
-      });
-      if (added) {
-        msg.className = "add-msg ok";
-        msg.textContent = "Added to your order: " + last.text + ". Add more, or scroll down to finish.";
-        updateEstimate();
-        var cartBox = document.getElementById("estimate");
-        cartBox.classList.remove("order-flash"); void cartBox.offsetWidth; cartBox.classList.add("order-flash");
-      } else {
-        msg.className = "add-msg err";
-        msg.textContent = "Please choose a flavor or item and a quantity first.";
-      }
+    var step = e.target.closest("[data-step]");
+    if (step) {
+      var row = step.closest(".item-row");
+      setQty(row, qtyOf(row) + parseInt(step.getAttribute("data-step"), 10));
+      clearItemsError();
       return;
     }
-    var rmBtn = e.target.closest("[data-cart-remove]");
-    if (rmBtn) {
-      cart.splice(parseInt(rmBtn.getAttribute("data-cart-remove"), 10), 1);
+    var rm = e.target.closest("[data-cart-remove]");
+    if (rm) {
+      var r = form.querySelector('.item-row[data-key="' + rm.getAttribute("data-cart-remove") + '"]');
+      if (r) setQty(r, 0);
+    }
+  });
+  form.addEventListener("input", function (e) {
+    if (e.target.classList.contains("qty")) {
+      syncRow(e.target.closest(".item-row"));
+      clearItemsError();
+    }
+  });
+  form.addEventListener("change", function (e) {
+    if (e.target.classList.contains("qty")) {
+      var row = e.target.closest(".item-row");
+      setQty(row, qtyOf(row));
+    } else if (e.target.closest(".item-details")) {
+      clearFieldError(e.target);
       updateEstimate();
     }
   });
 
-  function gatherBody() {
-    var lines = ["Hello SweetWalks,", "", "I would like to place an order:", ""];
-    cart.forEach(function (desc) {
-      lines.push("• " + desc.text + (desc.total != null ? " (" + money(desc.total) + ")" : ""));
+  // ---- Pickup / delivery ----
+  var deliveryBox = form.querySelector("[data-delivery-area]");
+  function syncFulfillment() {
+    var v = (form.querySelector('input[name="fulfillment"]:checked') || {}).value;
+    deliveryBox.hidden = v !== "Delivery";
+    form.querySelectorAll(".choice").forEach(function (label) {
+      var input = label.querySelector("input");
+      label.classList.toggle("is-checked", !!(input && input.checked));
     });
-    var custom = (form.elements.custom && form.elements.custom.value || "").trim();
-    if (custom) {
-      lines.push("");
-      lines.push("Custom request:");
-      lines.push(custom);
+    updateEstimate();
+  }
+  form.addEventListener("change", function (e) {
+    if (e.target.name === "fulfillment") {
+      syncFulfillment();
+      var r = form.querySelector(".fulfillment .choice-row.has-error");
+      if (r) r.classList.remove("has-error");
     }
-    if (lines.length === 4) {
-      // only header, no items
+  });
+
+  // ---- Allergies: "No allergies" checkbox or a list ----
+  var noAllergy = form.querySelector("[data-no-allergies]");
+  var allergyInput = form.elements.allergies;
+  function syncAllergy() {
+    if (noAllergy.checked) {
+      allergyInput.value = "None";
+      allergyInput.disabled = true;
+      clearFieldError(allergyInput);
+      var fs = noAllergy.closest("fieldset");
+      fs.classList.remove("has-error");
+    } else {
+      if (allergyInput.value === "None") allergyInput.value = "";
+      allergyInput.disabled = false;
     }
-    var fulfillment = (form.querySelector('input[name="fulfillment"]:checked') || {}).value || "";
-    var area = (form.elements["delivery-area"] && form.elements["delivery-area"].value || "").trim();
-    lines.push("");
-    lines.push("Fulfillment: " + fulfillment);
-    if (fulfillment === "Delivery" && area) lines.push("Delivery address: " + area);
-    function val(n) { return (form.elements[n] && form.elements[n].value || "").trim(); }
-    lines.push("");
-    lines.push("Customer information:");
-    lines.push("Name: " + val("name"));
-    lines.push("Phone: " + val("phone"));
-    if (val("email")) lines.push("Email: " + val("email"));
-    lines.push("Date needed: " + val("date-needed"));
-    lines.push("Time slot: " + val("time-slot"));
-    lines.push("Allergies: " + val("allergies"));
-    var notes = (form.elements.notes && form.elements.notes.value || "").trim();
-    if (notes) {
-      lines.push("");
-      lines.push("Notes:");
-      lines.push(notes);
-    }
-    lines.push("");
-    lines.push("Thank you!");
-    return lines.join("\r\n");
+  }
+  noAllergy.addEventListener("change", syncAllergy);
+
+  // ---- Date: min today, spelled-out preview ----
+  var dateInput = form.elements["date-needed"];
+  var dateSpelled = form.querySelector("[data-date-spelled]");
+  (function () {
+    var t = new Date();
+    var mm = String(t.getMonth() + 1), dd = String(t.getDate());
+    if (mm.length < 2) mm = "0" + mm;
+    if (dd.length < 2) dd = "0" + dd;
+    dateInput.min = t.getFullYear() + "-" + mm + "-" + dd;
+    if (dateInput.type !== "date") dateInput.setAttribute("placeholder", "YYYY-MM-DD");
+  })();
+  function syncDate() { dateSpelled.textContent = parseISO(dateInput.value) ? spellDate(dateInput.value) : ""; }
+  dateInput.addEventListener("input", syncDate);
+  dateInput.addEventListener("change", syncDate);
+
+  // ---- Validation ----
+  function holderOf(el) { return el.closest("label") || el.parentElement; }
+  function setFieldError(el, text) {
+    var holder = holderOf(el);
+    var err = holder.querySelector(".field-error");
+    if (!err) { err = document.createElement("em"); err.className = "field-error"; holder.appendChild(err); }
+    err.textContent = text;
+    holder.classList.add("has-error");
+    el.setAttribute("aria-invalid", "true");
+  }
+  function clearFieldError(el) {
+    var holder = holderOf(el);
+    if (!holder) return;
+    var err = holder.querySelector(".field-error");
+    if (err) err.remove();
+    holder.classList.remove("has-error");
+    el.removeAttribute("aria-invalid");
+  }
+  function clearItemsError() {
+    var box = document.getElementById("estimate");
+    box.classList.remove("has-error");
+    var err = box.querySelector(".field-error");
+    if (err) err.remove();
+  }
+  function clearAllErrors() {
+    form.querySelectorAll("[aria-invalid]").forEach(clearFieldError);
+    form.querySelectorAll(".has-error").forEach(function (n) { n.classList.remove("has-error"); });
+    clearItemsError();
+    var fe = form.querySelector("[data-form-error]");
+    fe.hidden = true;
+    fe.textContent = "";
   }
 
-  form.addEventListener("click", function (e) {
-    var add = e.target.closest("[data-add]");
-    if (add) {
-      addRow(add.closest("fieldset"));
-      return;
+  function validateOrder() {
+    clearAllErrors();
+    var problems = [];
+    var items = cartItems();
+    if (!items.length && !val("custom")) {
+      var box = document.getElementById("estimate");
+      box.classList.add("has-error");
+      var em = document.createElement("em");
+      em.className = "field-error";
+      em.textContent = "Your order is empty. Tap + next to at least one treat on the Menu, or write a custom request.";
+      box.appendChild(em);
+      problems.push([box, "Pick at least one treat (tap + on the Menu) or write a custom request."]);
     }
-    var remove = e.target.closest("[data-remove]");
-    if (remove) {
-      var row = remove.closest(".order-row");
-      var rows = row.parentElement.querySelectorAll(".order-row");
-      if (rows.length > 1) {
-        row.remove();
-        updateEstimate();
-      }
-    }
-  });
-
-  form.addEventListener("change", function (e) {
-    var row = e.target.closest(".order-row");
-    if (row) updateRow(row);
-    var delivery = form.querySelector("[data-delivery-area]");
-    if (delivery) {
-      var selected = form.querySelector('input[name="fulfillment"]:checked');
-      var v = selected && selected.value;
-      delivery.hidden = v !== "Delivery";
-      delivery.querySelector("textarea").required = !delivery.hidden;
-    }
-    updateEstimate();
-  });
-
-  form.addEventListener("input", function (e) {
-    if (e.target.matches('[data-field="qty"]')) updateEstimate();
-  });
-
-  function prepareOrder() {
-    form.querySelectorAll(".order-row").forEach(function (row) {
-      var d = rowDescription(row);
-      var main = row.querySelector('[data-field="type"], [data-field="flavor"]');
-      if (d && main && main.value) addRowToCart(row);
+    form.querySelectorAll(".item-row .detail-line").forEach(function (line) {
+      var title = line.querySelector(".detail-title").textContent;
+      var shape = line.querySelector(".d-shape"), flavor = line.querySelector(".d-flavor");
+      if (!shape.value) { setFieldError(shape, "Choose a shape."); problems.push([shape, '8" Two-Layer Cake, ' + title + ": choose a shape."]); }
+      if (!flavor.value) { setFieldError(flavor, "Choose a flavor."); problems.push([flavor, '8" Two-Layer Cake, ' + title + ": choose a flavor."]); }
     });
-    updateEstimate();
-    var customText = (form.elements.custom && form.elements.custom.value || "").trim();
-    if (!cart.length && !customText) {
-      var first = form.querySelector("[data-add-msg]");
-      first.className = "add-msg err";
-      first.textContent = "Your order is empty. Pick a dessert and tap \"Add to order\" first.";
-      first.closest("fieldset").scrollIntoView({ behavior: "smooth", block: "start" });
-      return null;
+    function need(name, test, text) {
+      var el = form.elements[name];
+      if (!el || el.disabled) return;
+      if (!test(val(name), el)) { setFieldError(el, text); problems.push([el, text]); }
     }
-    return gatherBody();
+    need("date-needed", function (v) {
+      var d = parseISO(v);
+      if (!d) return false;
+      var t = new Date(); t.setHours(0, 0, 0, 0);
+      return d >= t;
+    }, "Please choose the date you need your order (today or later).");
+    need("time-slot", function (v) { return !!v; }, "Please choose a time slot.");
+    var ful = form.querySelector('input[name="fulfillment"]:checked');
+    if (!ful) {
+      var cr = form.querySelector(".fulfillment .choice-row");
+      cr.classList.add("has-error");
+      problems.push([cr, "Please choose pickup or delivery."]);
+    } else if (ful.value === "Delivery") {
+      need("delivery-area", function (v) { return v.length >= 8 && /\d/.test(v); }, "Please enter the full delivery address: street, city, and ZIP.");
+    }
+    need("name", function (v) { return v.replace(/[^A-Za-z]/g, "").length >= 2; }, "Please enter your full name.");
+    need("phone", function (v) { return v.replace(/\D/g, "").length >= 10; }, "Please enter a phone number with area code.");
+    need("email", function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }, "Please enter a valid email address.");
+    if (!noAllergy.checked && val("allergies").length < 2) {
+      setFieldError(allergyInput, 'Check "No allergies" or list the allergies.');
+      noAllergy.closest("fieldset").classList.add("has-error");
+      problems.push([noAllergy, 'Allergies: check "No allergies" or list them.']);
+    }
+    if (!problems.length) return true;
+    var fe = form.querySelector("[data-form-error]");
+    fe.innerHTML = "";
+    var head = document.createElement("strong");
+    head.textContent = "Please fix " + (problems.length === 1 ? "this" : "these " + problems.length + " things") + " before sending:";
+    var ul = document.createElement("ul");
+    problems.forEach(function (p) { var li = document.createElement("li"); li.textContent = p[1]; ul.appendChild(li); });
+    fe.appendChild(head);
+    fe.appendChild(ul);
+    fe.hidden = false;
+    var first = problems[0][0];
+    first.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(function () { try { first.focus({ preventScroll: true }); } catch (err) {} }, 400);
+    return false;
+  }
+  form.addEventListener("input", function (e) { if (e.target.getAttribute && e.target.getAttribute("aria-invalid")) clearFieldError(e.target); });
+  form.addEventListener("change", function (e) { if (e.target.getAttribute && e.target.getAttribute("aria-invalid")) clearFieldError(e.target); });
+
+  // ---- Order text (email body, Instagram, text message, copy) ----
+  function orderInfo() {
+    var ful = (form.querySelector('input[name="fulfillment"]:checked') || {}).value || "";
+    return {
+      items: cartItems(),
+      custom: val("custom"),
+      name: val("name"),
+      phone: val("phone"),
+      email: val("email"),
+      dateISO: val("date-needed"),
+      date: spellDate(val("date-needed")),
+      slot: val("time-slot"),
+      fulfillment: ful,
+      address: ful === "Delivery" ? val("delivery-area") : "",
+      allergies: noAllergy.checked ? "None" : val("allergies"),
+      notes: val("notes")
+    };
+  }
+  function orderText(o) {
+    var lines = ["Hi SweetWalks! I'd like to place an order.", "", "Items:"];
+    var sum = 0, unpriced = false;
+    o.items.forEach(function (i) {
+      lines.push("- " + i.text + (i.priced && i.total != null ? " (" + money(i.total) + ")" : " (priced when you order)"));
+      if (i.priced && i.total != null) sum += i.total; else unpriced = true;
+    });
+    if (!o.items.length) lines.push("- (none, see custom request)");
+    if (o.items.length) lines.push("Estimated total: " + money(sum) + (unpriced ? ", plus items priced when you order" : ""));
+    if (o.custom) lines.push("", "Custom request: " + o.custom);
+    lines.push("", "Date needed: " + o.date, "Time slot: " + o.slot, "Pickup or delivery: " + o.fulfillment);
+    if (o.address) lines.push("Delivery address: " + o.address);
+    lines.push("Allergies: " + o.allergies, "", "Name: " + o.name, "Phone: " + o.phone, "Email: " + o.email);
+    if (o.notes) lines.push("Notes: " + o.notes);
+    return lines.join("\n");
+  }
+
+  function payload(o, body) {
+    var data = {
+      _subject: "New SweetWalks order request - " + (o.name || "website customer") + " - " + o.date,
+      _template: "table",
+      _captcha: "false",
+      _cc: ORDER_CC,
+      _autoresponse: "Thank you for your SweetWalks order request! Here is a copy of what you sent. We'll text you within 24 hours to confirm your total and deposit. Questions? Call or text " + PHONE_DISPLAY + ".",
+      _honey: val("_honey"),
+      name: o.name,
+      phone: o.phone,
+      email: o.email,
+      date_needed: o.date,
+      time_slot: o.slot,
+      fulfillment: o.fulfillment,
+      delivery_address: o.address,
+      items: o.items.map(function (i) { return i.text + (i.priced && i.total != null ? " (" + money(i.total) + ")" : " (priced when you order)"); }).join("\n"),
+      custom_request: o.custom,
+      allergies: o.allergies,
+      notes: o.notes,
+      message: body
+    };
+    if (o.email) data._replyto = o.email;
+    return data;
+  }
+
+  function logLocal(key, entry) {
+    try {
+      var list = JSON.parse(localStorage.getItem(key) || "[]");
+      list.push(entry);
+      localStorage.setItem(key, JSON.stringify(list.slice(-10)));
+    } catch (err) {}
+  }
+
+  function sendToSheet(data, result) {
+    if (!SHEET_URL || !window.fetch) return;
+    try {
+      var copy = {};
+      Object.keys(data).forEach(function (k) { if (k.charAt(0) !== "_" || k === "_honey") copy[k] = data[k]; });
+      copy.formsubmit_result = result;
+      copy.page = location.href;
+      fetch(SHEET_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(copy) }).catch(function () {});
+    } catch (err) {}
+  }
+
+  function sendOrder(data) {
+    if (!window.fetch) return Promise.reject(new Error("no fetch"));
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 25000) : null;
+    return fetch(ORDER_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(data),
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (json) {
+        if (timer) clearTimeout(timer);
+        var ok = json && (json.success === true || json.success === "true");
+        if (!res.ok || !ok) throw new Error((json && json.message) || ("HTTP " + res.status));
+        return json;
+      });
+    }, function (err) { if (timer) clearTimeout(timer); throw err; });
+  }
+
+  var okBox = form.querySelector("[data-send-ok]");
+  var failBox = form.querySelector("[data-send-fail]");
+  var lastBody = "";
+
+  function showSuccess(o) {
+    failBox.hidden = true;
+    okBox.querySelector("[data-send-ok-text]").textContent =
+      "Thank you, " + (o.name.split(" ")[0] || "friend") + "! Your order request for " + o.date + " (" + o.slot + ") is in. We'll text you at " + o.phone + " within 24 hours to confirm your total and deposit.";
+    var ul = okBox.querySelector("[data-send-ok-lines]");
+    ul.innerHTML = "";
+    o.items.forEach(function (i) { var li = document.createElement("li"); li.textContent = i.text; ul.appendChild(li); });
+    if (o.custom) { var li = document.createElement("li"); li.textContent = "Custom request: " + o.custom; ul.appendChild(li); }
+    okBox.hidden = false;
+    okBox.scrollIntoView({ behavior: "smooth", block: "center" });
+    try { okBox.focus({ preventScroll: true }); } catch (err) {}
+  }
+  function showFailure(body) {
+    okBox.hidden = true;
+    lastBody = body;
+    var sms = failBox.querySelector("[data-fail-sms]");
+    sms.href = PHONE_SMS + "?&body=" + encodeURIComponent(body);
+    failBox.querySelector("[data-copy-note]").textContent = "";
+    failBox.hidden = false;
+    failBox.scrollIntoView({ behavior: "smooth", block: "center" });
+    try { failBox.focus({ preventScroll: true }); } catch (err) {}
   }
 
   function copyText(text) {
@@ -406,658 +509,224 @@
       ta.value = text;
       ta.setAttribute("readonly", "");
       ta.style.position = "fixed";
-      ta.style.top = "0";
       ta.style.left = "-9999px";
       document.body.appendChild(ta);
-      ta.focus();
       ta.select();
-      ta.setSelectionRange(0, ta.value.length);
       var ok = false;
       try { ok = document.execCommand("copy"); } catch (err) {}
       document.body.removeChild(ta);
       return ok;
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).then(function () {
-        return true;
-      }).catch(function () {
-        return fallback();
-      });
+      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallback(); });
     }
     return Promise.resolve(fallback());
   }
 
-  function showIgNotice(ok, text) {
-    var notice = form.querySelector("[data-ig-notice]");
-    var fallback = form.querySelector("[data-ig-copy-text]");
-    if (notice) {
-      notice.hidden = false;
-      notice.className = "ig-copy-notice " + (ok ? "ok" : "err");
-      notice.textContent = ok
-        ? "Order copied! Paste it in the Instagram chat and send."
-        : "We couldn't copy automatically. Copy the order below, paste it in the Instagram chat, and send.";
-    }
-    if (fallback) {
-      fallback.hidden = ok;
-      fallback.textContent = ok ? "" : text;
-    }
-  }
-
-  function showNextSteps() {
-    var box = form.querySelector("[data-next-steps]");
-    if (!box) return;
-    var txt = box.querySelector("[data-next-steps-text]");
-    if (txt) txt.textContent = "Once you send your order request, we'll text you within 24 hours to confirm your total and deposit.";
-    box.classList.remove("is-sent");
-    void box.offsetWidth;
-    box.classList.add("is-sent");
-  }
-
-  var ORDER_ENDPOINT = "https://formsubmit.co/ajax/KCwalks@thesweetwalks.com";
-  var sending = false;
-
-  function showSendStatus(ok, text) {
-    var st = form.querySelector("[data-send-status]");
-    if (!st) return;
-    st.hidden = false;
-    st.className = "order-send-status " + (ok ? "ok" : "err");
-    st.textContent = text;
-    if (ok) st.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  function orderPayload(body) {
-    function val(n) { return (form.elements[n] && form.elements[n].value || "").trim(); }
-    var name = val("name");
-    var email = val("email");
-    var fulfillment = (form.querySelector('input[name="fulfillment"]:checked') || {}).value || "";
-    var items = cart.map(function (d) {
-      return d.text + (d.total != null ? " (" + money(d.total) + ")" : "");
-    }).join("\n");
-    var data = {
-      _subject: "New SweetWalks order request - " + (name || "website customer"),
-      _template: "table",
-      _captcha: "false",
-      _honey: val("_honey"),
-      name: name,
-      phone: val("phone"),
-      email: email,
-      date_needed: val("date-needed"),
-      time_slot: val("time-slot"),
-      fulfillment: fulfillment,
-      delivery_address: fulfillment === "Delivery" ? val("delivery-area") : "",
-      items: items,
-      allergies: val("allergies"),
-      custom_request: val("custom"),
-      notes: val("notes"),
-      message: body
-    };
-    if (email) data._replyto = email;
-    return data;
-  }
-
-  function sendOrder(body) {
-    if (!window.fetch) return Promise.reject(new Error("no fetch"));
-    return fetch(ORDER_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify(orderPayload(body))
-    }).then(function (res) {
-      return res.json().catch(function () { return {}; }).then(function (json) {
-        var okFlag = json && (json.success === true || json.success === "true");
-        if (!res.ok || !okFlag) throw new Error((json && json.message) || ("HTTP " + res.status));
-        return json;
-      });
+  failBox.querySelector("[data-copy-order]").addEventListener("click", function () {
+    var note = failBox.querySelector("[data-copy-note]");
+    copyText(lastBody).then(function (ok) {
+      note.textContent = ok ? "Your order is copied. Paste it into a text to " + PHONE_DISPLAY + "." : "We couldn't copy it. Please call or text " + PHONE_DISPLAY + ".";
     });
-  }
-
-  // ---- Required-field validation (submit and Instagram paths) ----
-  form.noValidate = true;
-  function fieldLabel(el) { return el.closest("label") || el.parentElement; }
-  function setFieldError(el, text) {
-    var holder = fieldLabel(el);
-    var err = holder.querySelector(".field-error");
-    if (!err) {
-      err = document.createElement("em");
-      err.className = "field-error";
-      err.setAttribute("aria-live", "polite");
-      holder.appendChild(err);
-    }
-    err.textContent = text;
-    el.setAttribute("aria-invalid", "true");
-    holder.classList.add("has-error");
-  }
-  function clearFieldError(el) {
-    var holder = fieldLabel(el);
-    if (!holder) return;
-    var err = holder.querySelector(".field-error");
-    if (err) err.remove();
-    el.removeAttribute("aria-invalid");
-    holder.classList.remove("has-error");
-  }
-  function clearAllErrors() {
-    form.querySelectorAll("[aria-invalid]").forEach(clearFieldError);
-    form.querySelectorAll(".choice-row.has-error, fieldset.has-error").forEach(function (n) { n.classList.remove("has-error"); });
-    var fe = form.querySelector("[data-form-error]");
-    if (fe) { fe.hidden = true; fe.textContent = ""; }
-  }
-  function isVisible(el) {
-    var n = el;
-    while (n && n !== form) { if (n.hidden) return false; n = n.parentElement; }
-    return true;
-  }
-  // A row counts as started once any choice is made or the quantity/unit is changed.
-  function rowStarted(row) {
-    var started = false;
-    row.querySelectorAll("select[data-field], input[data-field]").forEach(function (el) {
-      var f = el.getAttribute("data-field");
-      if (f === "qty") { if (el.value.trim() !== "" && el.value.trim() !== "1") started = true; }
-      else if (f === "unit") { if (el.value && el.value !== "each") started = true; }
-      else if (el.value) started = true;
-    });
-    return started;
-  }
-  var ROW_FIELD_MSG = {
-    flavor: "Please choose a flavor.",
-    type: "Please choose one.",
-    nuts: "Please choose with or without nuts.",
-    shape: "Please choose a shape.",
-    unit: "Please choose each or dozen.",
-    qty: "Please enter a quantity."
-  };
-  // Returns list of problem elements for a started row.
-  function rowProblems(row) {
-    var problems = [];
-    row.querySelectorAll("select[data-field], input[data-field]").forEach(function (el) {
-      if (!isVisible(el)) return;
-      var f = el.getAttribute("data-field");
-      if (f === "qty") {
-        var q = el.value.trim();
-        var max = parseInt(el.getAttribute("max") || "99", 10);
-        var n = parseInt(q, 10);
-        if (!/^\d+$/.test(q) || n < 1 || n > max) problems.push([el, "Please enter a quantity from 1 to " + max + "."]);
-      } else if (!el.value) {
-        problems.push([el, ROW_FIELD_MSG[f] || "Please choose one."]);
-      }
-    });
-    return problems;
-  }
-  function validateOrder() {
-    clearAllErrors();
-    var problems = [];
-    var completeRows = 0;
-    form.querySelectorAll(".order-row").forEach(function (row) {
-      if (!rowStarted(row)) return;
-      var rp = rowProblems(row);
-      if (rp.length) {
-        problems = problems.concat(rp);
-        var fs = row.closest("fieldset");
-        var msg = fs && fs.querySelector("[data-add-msg]");
-        if (msg) {
-          msg.className = "add-msg err";
-          msg.textContent = "This item isn't finished. Fill in the highlighted choices, or set it back to \"Choose\" to skip it.";
-        }
-      } else if (rowDescription(row)) {
-        completeRows++;
-      }
-    });
-    function val(n) { return (form.elements[n] && form.elements[n].value || "").trim(); }
-    var custom = val("custom");
-    if (!cart.length && !completeRows && !custom && !problems.length) {
-      var first = form.querySelector("[data-add-msg]");
-      if (first) {
-        first.className = "add-msg err";
-        first.textContent = "Your order is empty. Pick a dessert and tap \"Add to order\" first, or describe a custom request.";
-        problems.push([first.closest("fieldset"), null]);
-      }
-    }
-    function need(name, test, text) {
-      var el = form.elements[name];
-      if (!el) return;
-      if (!test(val(name), el)) problems.push([el, text]);
-    }
-    need("name", function (v) { return v.replace(/[^A-Za-z]/g, "").length >= 2; }, "Please enter your full name.");
-    need("phone", function (v) { return v.replace(/\D/g, "").length >= 10; }, "Please enter a phone number with area code.");
-    need("email", function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }, "Please enter a valid email address.");
-    need("date-needed", function (v, el) {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
-      return !el.min || v >= el.min;
-    }, "Please choose the date you need your order (today or later).");
-    need("time-slot", function (v) { return !!v; }, "Please choose a time slot.");
-    var selected = form.querySelector('input[name="fulfillment"]:checked');
-    if (!selected) {
-      var row = form.querySelector(".fulfillment .choice-row");
-      if (row) row.classList.add("has-error");
-      problems.push([row || form.querySelector('input[name="fulfillment"]'), null]);
-    } else if (selected.value === "Delivery") {
-      need("delivery-area", function (v) {
-        return v.length >= 12 && /\d/.test(v.replace(/\b\d{5}(-\d{4})?\b\s*$/, "")) && /[A-Za-z]{3,}/.test(v) && /\b\d{5}(-\d{4})?\b/.test(v);
-      }, "Please enter the full delivery address: street, city, and ZIP.");
-    }
-    need("allergies", function (v) { return v.length >= 2; }, "Please list any allergies, or type None.");
-
-    if (!problems.length) return true;
-    problems.forEach(function (p) { if (p[1] && p[0].matches && p[0].matches("input, select, textarea")) setFieldError(p[0], p[1]); });
-    var fe = form.querySelector("[data-form-error]");
-    if (fe) {
-      fe.hidden = false;
-      fe.textContent = "Please fill in the highlighted fields above before sending your order.";
-    }
-    var target = problems[0][0];
-    target.scrollIntoView({ behavior: "smooth", block: "center" });
-    if (target.focus && target.matches && target.matches("input, select, textarea")) {
-      try { target.focus({ preventScroll: true }); } catch (err) { target.focus(); }
-    }
-    return false;
-  }
-  form.addEventListener("input", function (e) { if (e.target.getAttribute && e.target.getAttribute("aria-invalid")) clearFieldError(e.target); });
-  form.addEventListener("change", function (e) {
-    if (e.target.getAttribute && e.target.getAttribute("aria-invalid")) clearFieldError(e.target);
-    if (e.target.name === "fulfillment") {
-      var r = form.querySelector(".fulfillment .choice-row.has-error");
-      if (r) r.classList.remove("has-error");
-    }
   });
 
+  var sending = false;
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     if (sending) return;
     if (!validateOrder()) return;
-    var body = prepareOrder();
-    if (!body) return;
-    saveRememberedOrder();
-    showNextSteps();
+    var o = orderInfo();
+    var body = orderText(o);
+    var data = payload(o, body);
+    saveRemembered(o);
     var btn = form.querySelector('button[type="submit"]');
-    var label = btn ? btn.textContent : "";
-    var st = form.querySelector("[data-send-status]");
-    if (st) st.hidden = true;
+    var label = btn.textContent;
+    okBox.hidden = true;
+    failBox.hidden = true;
     sending = true;
-    if (btn) { btn.disabled = true; btn.textContent = "Sending..."; }
-    sendOrder(body).then(function () {
-      showSendStatus(true, "Order request received! We'll text you within 24 hours to confirm your total and deposit.");
-    }).catch(function () {
-      if (window.swEmailChooser) {
-        window.swEmailChooser("Order request", body, "Our automatic send didn't go through. Please pick an option below, then press Send in your email app so your order reaches us.");
-      }
+    btn.disabled = true;
+    btn.textContent = "Sending, please wait...";
+    var stamp = new Date().toISOString();
+    if (data._honey) {
+      // The spam trap was filled. FormSubmit discards these, so never show
+      // "thank you": log it and show the call/text option instead.
+      if (window.console) console.warn("SweetWalks order: spam-trap field was filled; FormSubmit will discard this submission.");
+      logLocal("sweetwalks-spamtrap-log", { at: stamp, name: o.name, date: o.date });
+    }
+    sendOrder(data).then(function (json) {
+      logLocal("sweetwalks-sent-log", { at: stamp, ok: true, date: o.date, items: o.items.length });
+      sendToSheet(data, "sent");
+      if (data._honey) showFailure(body); else showSuccess(o);
+    }).catch(function (err) {
+      logLocal("sweetwalks-sent-log", { at: stamp, ok: false, error: String(err && err.message || err) });
+      sendToSheet(data, "failed: " + String(err && err.message || err));
+      showFailure(body);
     }).then(function () {
       sending = false;
-      if (btn) { btn.disabled = false; btn.textContent = label; }
+      btn.disabled = false;
+      btn.textContent = label;
     });
   });
 
   var igBtn = form.querySelector("[data-order-instagram]");
-  if (igBtn) {
-    igBtn.addEventListener("click", function () {
-      if (!validateOrder()) return;
-      var body = prepareOrder();
-      if (!body) return;
-      saveRememberedOrder();
-      showNextSteps();
-      copyText(body).then(function (ok) {
-        showIgNotice(ok, body);
-        window.open("https://ig.me/m/sweetwalks_bake", "_blank", "noopener,noreferrer");
-      });
+  igBtn.addEventListener("click", function () {
+    if (!validateOrder()) return;
+    var o = orderInfo();
+    var body = orderText(o);
+    saveRemembered(o);
+    var notice = form.querySelector("[data-ig-notice]");
+    var pre = form.querySelector("[data-ig-copy-text]");
+    copyText(body).then(function (ok) {
+      notice.hidden = false;
+      notice.className = "ig-copy-notice " + (ok ? "ok" : "err");
+      notice.textContent = ok ? "Your order is copied. In the Instagram chat, tap the message box, paste, and send." : "We couldn't copy automatically. Copy the order below, then paste it into the Instagram chat.";
+      pre.hidden = ok;
+      pre.textContent = ok ? "" : body;
+      window.open("https://ig.me/m/sweetwalks_bake", "_blank", "noopener,noreferrer");
     });
-  }
-
-  form.querySelectorAll(".order-row").forEach(updateRow);
-
-  function syncChoices() {
-    form.querySelectorAll(".choice").forEach(function (label) {
-      var input = label.querySelector("input");
-      label.classList.toggle("is-checked", !!(input && input.checked));
-    });
-  }
-  form.addEventListener("change", function (e) {
-    if (e.target && e.target.closest && e.target.closest(".choice")) syncChoices();
-  });
-  syncChoices();
-
-  // Order buttons on menu items: jump to the form with that item picked
-  document.addEventListener("click", function (e) {
-    var link = e.target.closest("[data-order]");
-    if (!link) return;
-    e.preventDefault();
-    var kind = link.getAttribute("data-order");
-    var target;
-    if (kind === "custom") {
-      var custom = form.elements.custom;
-      target = custom.closest("fieldset");
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-      setTimeout(function () { try { custom.focus({ preventScroll: true }); } catch (err) { custom.focus(); } }, 500);
-    } else {
-      target = form.querySelector('fieldset[data-repeat="' + kind + '"]');
-      if (!target) return;
-      var rows = target.querySelectorAll(".order-row");
-      var row = rows[rows.length - 1];
-      var main = row.querySelector('[data-field="type"], [data-field="flavor"]');
-      if (main && main.value) resetRow(row);
-      var sets = (link.getAttribute("data-set") || "").split(";").filter(Boolean);
-      var unit = row.querySelector('[data-field="unit"]');
-      if (unit && !unit.value) unit.value = "each";
-      var order = ["type", "shape", "unit"];
-      sets.sort(function (a, b) { return order.indexOf(a.split("=")[0]) - order.indexOf(b.split("=")[0]); });
-      sets.forEach(function (pair) {
-        var k = pair.split("=")[0], v = pair.slice(k.length + 1);
-        var el = row.querySelector('[data-field="' + k + '"]');
-        if (!el) return;
-        el.value = v;
-        el.dispatchEvent(new Event("change", { bubbles: true }));
-      });
-      updateRow(row);
-      updateEstimate();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-      var focusEl = row.querySelector("select:not([hidden])");
-      var empty = Array.prototype.find.call(row.querySelectorAll("select"), function (sel) {
-        return !sel.value && !sel.closest("[hidden]");
-      });
-      setTimeout(function () { var toFocus = empty || focusEl || row; try { toFocus.focus({ preventScroll: true }); } catch (err) { toFocus.focus(); } }, 500);
-    }
-    target.classList.remove("order-flash");
-    void target.offsetWidth;
-    target.classList.add("order-flash");
   });
 
-  // Floating Order Now button: hide at the top of the page and while the form is on screen
-  var floatBtn = document.querySelector("[data-float-order]");
-  var orderSection = document.getElementById("order");
-  if (floatBtn && "IntersectionObserver" in window) {
-    var hideFloat = { order: false, hero: true };
-    var syncFloat = function () {
-      floatBtn.classList.toggle("is-hidden", hideFloat.order || hideFloat.hero);
-    };
-    if (orderSection) {
-      new IntersectionObserver(function (entries) {
-        hideFloat.order = entries[0].isIntersecting;
-        syncFloat();
-      }, { threshold: 0.05 }).observe(orderSection);
-    }
-    var hero = document.querySelector(".hero");
-    if (hero) {
-      // Hide the button while any of the hero is in the main view so it does not cover CTAs or text
-      new IntersectionObserver(function (entries) {
-        hideFloat.hero = entries[0].isIntersecting;
-        syncFloat();
-      }, { threshold: 0, rootMargin: "-80px 0px -90px 0px" }).observe(hero);
-    } else {
-      hideFloat.hero = false;
-      syncFloat();
-    }
-  }
-
-  var dateInput = form.elements["date-needed"];
-  if (dateInput) {
-    var t = new Date();
-    var mm = String(t.getMonth() + 1);
-    var dd = String(t.getDate());
-    if (mm.length < 2) mm = "0" + mm;
-    if (dd.length < 2) dd = "0" + dd;
-    dateInput.min = t.getFullYear() + "-" + mm + "-" + dd;
-    if (dateInput.type !== "date") {
-      dateInput.setAttribute("placeholder", "YYYY-MM-DD");
-      dateInput.setAttribute("pattern", "\\d{4}-\\d{2}-\\d{2}");
-      dateInput.setAttribute("title", "Enter the date as YYYY-MM-DD");
-      dateInput.setAttribute("inputmode", "numeric");
-    }
-  }
-  updateEstimate();
-  var deliveryInit = form.querySelector("[data-delivery-area]");
-  if (deliveryInit) {
-    var initSel = form.querySelector('input[name="fulfillment"]:checked');
-    var initV = initSel && initSel.value;
-    deliveryInit.hidden = initV !== "Delivery";
-    deliveryInit.querySelector("textarea").required = !deliveryInit.hidden;
-  }
-
+  // ---- Remember info and reorder (this device only) ----
   var SAVED_KEY = "sweetwalks-saved";
-  var PICKUP_VALUE = "Pickup at 2801 Arden Way, Sacramento";
-  // Older saves used "Pickup in Sacramento" or "Meet up"; both are now pickup at Arden Way.
-  function normalizeFulfillment(v) {
-    if (v === "Pickup in Sacramento" || v === "Meet up") return PICKUP_VALUE;
-    return v;
-  }
   var REORDER_DISMISS = "sw-reorder-dismissed";
-
+  var OLD_COOKIE_KEYS = { "Snickerdoodle": "cookie-snickerdoodle", "Macadamia Nut": "cookie-macadamia", "Peanut Butter": "cookie-peanut-butter", "Sugar": "cookie-sugar", "Oatmeal Raisin": "cookie-oatmeal-raisin" };
+  function keyFromOld(item) {
+    // Convert saves from the old dropdown form into the new item boxes.
+    var f = item.fields || {};
+    var mult = f.unit === "dozen" ? 12 : 1;
+    var q = (parseInt(f.qty, 10) || 1) * mult;
+    var key = null, qty = q;
+    if (item.kind === "cookie") key = f.flavor === "Chocolate Chip" ? (f.nuts === "with nuts" ? "cookie-cc-nuts" : "cookie-cc-nonuts") : OLD_COOKIE_KEYS[f.flavor];
+    else if (item.kind === "cupcake") {
+      var r = rows.filter(function (row) { return row.getAttribute("data-key").indexOf("cupcake-") === 0 && row.getAttribute("data-name") === f.flavor; })[0];
+      key = r && r.getAttribute("data-key");
+    } else if (item.kind === "cake") {
+      qty = parseInt(f.qty, 10) || 1;
+      if (f.type === "9x13 Cake") key = "cake-9x13";
+      else if (f.type === "Bundt Cake") key = { "7Up": "cake-bundt-7up", "Lemon": "cake-bundt-lemon", "Pineapple Upside Down": "cake-bundt-pineapple" }[f.flavor];
+      else if (f.type && f.type.indexOf("Two-Layer") !== -1) { key = "cake-8in"; item.details = [{ shape: f.shape, flavor: f.flavor }]; }
+    } else if (item.kind === "other") {
+      if (f.type === "Brownies") key = f.nuts === "with nuts" ? "brownie-nuts" : "brownie-nonuts";
+      else if (f.type === "Fudge") { key = f.nuts === "with nuts" ? "fudge-nuts" : "fudge-nonuts"; qty = parseInt(f.qty, 10) || 1; }
+      else if (f.type && f.type.indexOf("Cold Mint Pie") === 0) { key = "pie-cold-mint"; qty = parseInt(f.qty, 10) || 1; }
+    }
+    return key ? { key: key, qty: qty, text: item.text, details: item.details || [] } : null;
+  }
   function readSaved() {
     try {
-      var raw = localStorage.getItem(SAVED_KEY);
-      if (!raw) return null;
-      var data = JSON.parse(raw);
+      var data = JSON.parse(localStorage.getItem(SAVED_KEY) || "null");
       if (!data || typeof data !== "object") return null;
-      // Older saves may carry fields the form no longer has (payment method, free-text time).
-      if (data.contact && typeof data.contact === "object") {
-        delete data.contact.payment;
-        if (data.contact.fulfillment) {
-          data.contact.fulfillment = normalizeFulfillment(data.contact.fulfillment);
-          if (data.contact.fulfillment !== "Delivery") data.contact.deliveryArea = "";
-        }
+      if (data.contact && data.contact.fulfillment && data.contact.fulfillment !== "Delivery") {
+        data.contact.fulfillment = PICKUP_VALUE;
+        data.contact.deliveryArea = "";
       }
-      if (data.lastOrder && typeof data.lastOrder === "object") {
-        delete data.lastOrder.payment;
-        delete data.lastOrder.timeNeeded;
+      if (data.lastOrder && data.lastOrder.items) {
+        data.lastOrder.items = data.lastOrder.items.map(function (i) { return i && i.key ? i : (i ? keyFromOld(i) : null); }).filter(Boolean);
       }
       return data;
-    } catch (err) {
-      return null;
-    }
+    } catch (err) { return null; }
   }
-
-  function writeSaved(data) {
-    try { localStorage.setItem(SAVED_KEY, JSON.stringify(data)); } catch (err) {}
-  }
-
+  function writeSaved(d) { try { localStorage.setItem(SAVED_KEY, JSON.stringify(d)); } catch (err) {} }
   function clearSaved() {
     try { localStorage.removeItem(SAVED_KEY); } catch (err) {}
     try { sessionStorage.removeItem(REORDER_DISMISS); } catch (err) {}
   }
-
-  function valOf(name) {
-    return (form.elements[name] && form.elements[name].value || "").trim();
-  }
-
-  function collectContact() {
-    var fulfillment = (form.querySelector('input[name="fulfillment"]:checked') || {}).value || "";
-    return {
-      name: valOf("name"),
-      phone: valOf("phone"),
-      email: valOf("email"),
-      fulfillment: fulfillment,
-      deliveryArea: valOf("delivery-area")
-    };
-  }
-
-  function applyContact(contact) {
-    if (!contact) return;
-    function setVal(name, value) {
-      if (!value || !form.elements[name]) return;
-      form.elements[name].value = value;
-    }
-    setVal("name", contact.name);
-    setVal("phone", contact.phone);
-    setVal("email", contact.email);
-    if (contact.fulfillment) {
-      form.querySelectorAll('input[name="fulfillment"]').forEach(function (radio) {
-        radio.checked = radio.value === contact.fulfillment;
-      });
-      var checked = form.querySelector('input[name="fulfillment"]:checked');
-      if (checked) checked.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-    setVal("delivery-area", contact.deliveryArea);
-  }
-
-  function clearContactFields() {
-    ["name", "phone", "email", "delivery-area"].forEach(function (name) {
-      if (form.elements[name]) form.elements[name].value = "";
-    });
-    var pickup = form.querySelector('input[name="fulfillment"][value="' + PICKUP_VALUE + '"]');
-    if (pickup) {
-      pickup.checked = true;
-      pickup.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-  }
-
-  function lastOrderFrom(data) {
-    return data && data.lastOrder && typeof data.lastOrder === "object" ? data.lastOrder : null;
-  }
-
-  function hasLastOrder(data) {
-    var last = lastOrderFrom(data);
-    if (!last) return false;
-    var items = last.items || [];
-    return items.length > 0 || !!(last.custom && String(last.custom).trim());
-  }
-
-  function updateClearLink() {
-    var link = form.querySelector("[data-clear-saved]");
-    if (!link) return;
-    var data = readSaved();
-    var show = !!(data && (data.contact || hasLastOrder(data)));
-    link.hidden = !show;
-  }
-
+  function hasLast(d) { var l = d && d.lastOrder; return !!(l && ((l.items && l.items.length) || (l.custom && String(l.custom).trim()))); }
+  var clearBtn = form.querySelector("[data-clear-saved]");
   var reorderCard = document.querySelector("[data-reorder-card]");
+  function updateClearLink() { var d = readSaved(); clearBtn.hidden = !(d && (d.contact || hasLast(d))); }
 
-  function hideReorderCard() {
-    if (reorderCard) reorderCard.hidden = true;
-  }
-
-  function renderReorderCard(data) {
-    if (!reorderCard || !hasLastOrder(data)) {
-      hideReorderCard();
-      return;
-    }
-    var dismissed = false;
-    try { dismissed = sessionStorage.getItem(REORDER_DISMISS) === "1"; } catch (err) {}
-    if (dismissed) {
-      hideReorderCard();
-      return;
-    }
-    var list = reorderCard.querySelector("[data-reorder-list]");
-    var last = lastOrderFrom(data);
-    list.innerHTML = "";
-    (last.items || []).forEach(function (item) {
-      if (!item || !item.text) return;
-      var li = document.createElement("li");
-      li.textContent = item.text;
-      list.appendChild(li);
-    });
-    if (last.custom && String(last.custom).trim()) {
-      var customLi = document.createElement("li");
-      customLi.textContent = "Custom request: " + String(last.custom).trim();
-      list.appendChild(customLi);
-    }
-    if (last.timeSlot && list.children.length) {
-      var slotLi = document.createElement("li");
-      slotLi.textContent = "Time slot: " + last.timeSlot;
-      list.appendChild(slotLi);
-    }
-    reorderCard.hidden = list.children.length === 0;
-  }
-
-  function setRowField(row, name, value) {
-    if (value == null || value === "") return;
-    var el = row.querySelector('[data-field="' + name + '"]');
-    if (!el) return;
-    el.value = String(value);
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-
-  function restoreCartItem(saved) {
-    if (!saved || !saved.kind) return false;
-    var fs = form.querySelector('fieldset[data-repeat="' + saved.kind + '"]');
-    if (!fs) return false;
-    var row = fs.querySelector(".order-row");
-    if (!row) return false;
-    resetRow(row);
-    var fields = saved.fields || {};
-    setRowField(row, "type", fields.type);
-    setRowField(row, "shape", fields.shape);
-    setRowField(row, "flavor", fields.flavor);
-    setRowField(row, "nuts", fields.nuts);
-    setRowField(row, "unit", fields.unit);
-    setRowField(row, "qty", fields.qty);
-    updateRow(row);
-    return !!addRowToCart(row);
-  }
-
-  function saveRememberedOrder() {
-    var box = form.elements["remember-info"];
-    if (box && !box.checked) {
-      clearSaved();
-      hideReorderCard();
-      updateClearLink();
-      return;
-    }
-    var items = cart.map(function (item) {
-      return {
-        kind: item.kind,
-        text: item.text,
-        total: item.total,
-        priced: item.priced,
-        fields: item.fields || {}
-      };
-    });
+  function saveRemembered(o) {
+    if (!form.elements["remember-info"].checked) { clearSaved(); reorderCard.hidden = true; updateClearLink(); return; }
     writeSaved({
-      contact: collectContact(),
+      contact: { name: o.name, phone: o.phone, email: o.email, fulfillment: o.fulfillment, deliveryArea: o.address },
       lastOrder: {
-        items: items,
-        custom: valOf("custom"),
-        timeSlot: valOf("time-slot")
+        items: o.items.map(function (i) { return { key: i.key, qty: i.qty, text: i.text, details: i.details }; }),
+        custom: o.custom,
+        timeSlot: o.slot,
+        dateNeeded: o.date,
+        savedAt: new Date().toISOString()
       }
     });
     updateClearLink();
   }
+  function applyContact(c) {
+    if (!c) return;
+    ["name", "phone", "email"].forEach(function (k) { if (c[k] && form.elements[k]) form.elements[k].value = c[k]; });
+    if (c.fulfillment) {
+      form.querySelectorAll('input[name="fulfillment"]').forEach(function (r) { r.checked = r.value === c.fulfillment; });
+      if (!form.querySelector('input[name="fulfillment"]:checked')) form.querySelector('input[name="fulfillment"]').checked = true;
+    }
+    if (c.deliveryArea) form.elements["delivery-area"].value = c.deliveryArea;
+  }
+  function renderReorder(d) {
+    if (!hasLast(d)) { reorderCard.hidden = true; return; }
+    try { if (sessionStorage.getItem(REORDER_DISMISS) === "1") { reorderCard.hidden = true; return; } } catch (err) {}
+    var list = reorderCard.querySelector("[data-reorder-list]");
+    list.innerHTML = "";
+    d.lastOrder.items.forEach(function (i) { var li = document.createElement("li"); li.textContent = i.text; list.appendChild(li); });
+    if (d.lastOrder.custom) { var li = document.createElement("li"); li.textContent = "Custom request: " + d.lastOrder.custom; list.appendChild(li); }
+    reorderCard.hidden = list.children.length === 0;
+  }
+  function restoreItems(items) {
+    rows.forEach(function (r) { setQty(r, 0); });
+    items.forEach(function (i) {
+      var r = form.querySelector('.item-row[data-key="' + i.key + '"]');
+      if (!r) return;
+      setQty(r, i.qty);
+      var lines = r.querySelectorAll(".detail-line");
+      (i.details || []).forEach(function (det, idx) {
+        if (!lines[idx] || !det) return;
+        if (det.shape) lines[idx].querySelector(".d-shape").value = det.shape;
+        if (det.flavor) lines[idx].querySelector(".d-flavor").value = det.flavor;
+      });
+    });
+    updateEstimate();
+  }
+  reorderCard.querySelector("[data-reorder-again]").addEventListener("click", function () {
+    var d = readSaved();
+    if (!hasLast(d)) return;
+    restoreItems(d.lastOrder.items || []);
+    form.elements.custom.value = d.lastOrder.custom || "";
+    var slot = form.elements["time-slot"];
+    if (d.lastOrder.timeSlot && Array.prototype.some.call(slot.options, function (op) { return op.value === d.lastOrder.timeSlot; })) slot.value = d.lastOrder.timeSlot;
+    document.getElementById("estimate").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  reorderCard.querySelector("[data-reorder-new]").addEventListener("click", function () {
+    try { sessionStorage.setItem(REORDER_DISMISS, "1"); } catch (err) {}
+    reorderCard.hidden = true;
+  });
+  clearBtn.addEventListener("click", function () {
+    clearSaved();
+    ["name", "phone", "email", "delivery-area"].forEach(function (k) { form.elements[k].value = ""; });
+    form.querySelector('input[name="fulfillment"]').checked = true;
+    syncFulfillment();
+    reorderCard.hidden = true;
+    updateClearLink();
+  });
 
   var saved = readSaved();
   if (saved && saved.contact) applyContact(saved.contact);
-  renderReorderCard(saved);
+  renderReorder(saved);
   updateClearLink();
+  syncFulfillment();
+  syncAllergy();
+  syncDate();
 
-  var clearBtn = form.querySelector("[data-clear-saved]");
-  if (clearBtn) {
-    clearBtn.addEventListener("click", function () {
-      clearSaved();
-      clearContactFields();
-      hideReorderCard();
-      updateClearLink();
-    });
+  // Floating Order button: hidden at the top and while the order section is on screen
+  var floatBtn = document.querySelector("[data-float-order]");
+  var orderSection = document.getElementById("order");
+  if (floatBtn && "IntersectionObserver" in window) {
+    var hide = { order: false, hero: true };
+    var sync = function () { floatBtn.classList.toggle("is-hidden", hide.order || hide.hero); };
+    new IntersectionObserver(function (en) { hide.order = en[0].isIntersecting; sync(); }, { threshold: 0.05 }).observe(orderSection);
+    var hero = document.querySelector(".hero");
+    if (hero) new IntersectionObserver(function (en) { hide.hero = en[0].isIntersecting; sync(); }, { threshold: 0, rootMargin: "-80px 0px -90px 0px" }).observe(hero);
   }
 
-  if (reorderCard) {
-    var againBtn = reorderCard.querySelector("[data-reorder-again]");
-    var newBtn = reorderCard.querySelector("[data-reorder-new]");
-    if (againBtn) {
-      againBtn.addEventListener("click", function () {
-        var data = readSaved();
-        if (!hasLastOrder(data)) return;
-        cart = [];
-        var last = lastOrderFrom(data);
-        (last.items || []).forEach(restoreCartItem);
-        if (form.elements.custom) form.elements.custom.value = last.custom || "";
-        var slotSel = form.elements["time-slot"];
-        if (slotSel && last.timeSlot) {
-          var okSlot = Array.prototype.some.call(slotSel.options, function (o) { return o.value === last.timeSlot; });
-          if (okSlot) slotSel.value = last.timeSlot;
-        }
-        updateEstimate();
-        var cartBox = document.getElementById("estimate");
-        if (cartBox) {
-          cartBox.classList.remove("order-flash");
-          void cartBox.offsetWidth;
-          cartBox.classList.add("order-flash");
-          cartBox.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      });
-    }
-    if (newBtn) {
-      newBtn.addEventListener("click", function () {
-        try { sessionStorage.setItem(REORDER_DISMISS, "1"); } catch (err) {}
-        cart = [];
-        updateEstimate();
-        hideReorderCard();
-      });
-    }
-  }
+  window.swOrderDebug = { cartItems: cartItems, spellDate: spellDate };
 })();
+
 
 // Email chooser: lets visitors send with Gmail, Outlook, Yahoo, their mail app, or copy the address
 (function () {
@@ -1175,43 +844,16 @@
 })();
 
 
-// Hide Thanksgiving cutoff after Sunday, Nov 22, 2026, 11:59 PM Pacific.
-// The message stays visible if JavaScript is off.
-(function () {
-  function pastCutoff() {
-    try {
-      var parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/Los_Angeles",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hourCycle: "h23"
-      }).formatToParts(new Date());
-      var g = {};
-      parts.forEach(function (p) { g[p.type] = p.value; });
-      return (g.year + g.month + g.day + g.hour + g.minute + g.second) > "20261122235959";
-    } catch (e) {
-      return Date.now() > Date.parse("2026-11-22T23:59:59-08:00");
-    }
-  }
-  if (!pastCutoff()) return;
-  document.documentElement.classList.add("promo-hidden", "thanks-cutoff-passed");
-  var nodes = document.querySelectorAll("[data-thanks-cutoff], [data-thanks-cutoff-banner]");
-  for (var i = 0; i < nodes.length; i++) nodes[i].hidden = true;
-})();
-
 // Holiday promo banner dismiss (same visit only)
 (function () {
   var banner = document.querySelector("[data-promo-banner]");
   var btn = document.querySelector("[data-promo-dismiss]");
   if (!banner || !btn) return;
+  try { if (sessionStorage.getItem("sw-promo-dismissed-2026-xmas")) banner.hidden = true; } catch (e) {}
   btn.addEventListener("click", function () {
     banner.hidden = true;
     document.documentElement.classList.add("promo-hidden");
-    try { sessionStorage.setItem("sw-promo-dismissed-2026-thanks", "1"); } catch (e) {}
+    try { sessionStorage.setItem("sw-promo-dismissed-2026-xmas", "1"); } catch (e) {}
   });
 })();
 
