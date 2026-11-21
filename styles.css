@@ -1926,3 +1926,10 @@ body::before { background: linear-gradient(90deg, #a03651, #e36c8a 35%, #abd2bf 
 .contact-buttons { display: grid; gap: 0.7rem; max-width: 26rem; margin: 0 auto 1.2rem; }
 .footer-contact a { display: inline-flex; align-items: center; min-height: 44px; }
 .policy-card h2 { text-align: left; }
+.item-row { padding-left: 0.6rem; padding-right: 0.6rem; border-radius: 0.8rem; }
+.item-row.has-dozen .item-info { grid-row: span 2; align-self: center; }
+.step-dozen { grid-column: 2; }
+@media (max-width: 600px) {
+  .menu-cat.card { padding-left: 0.75rem; padding-right: 0.75rem; }
+}
+.item-name { overflow-wrap: anywhere; hyphens: auto; }
