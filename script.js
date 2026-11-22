@@ -616,7 +616,6 @@
     } else if (item.kind === "other") {
       if (f.type === "Brownies") key = f.nuts === "with nuts" ? "brownie-nuts" : "brownie-nonuts";
       else if (f.type === "Fudge") { key = f.nuts === "with nuts" ? "fudge-nuts" : "fudge-nonuts"; qty = parseInt(f.qty, 10) || 1; }
-      else if (f.type && f.type.indexOf("Cold Mint Pie") === 0) { key = "pie-cold-mint"; qty = parseInt(f.qty, 10) || 1; }
     }
     return key ? { key: key, qty: qty, text: item.text, details: item.details || [] } : null;
   }
