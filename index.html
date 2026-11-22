@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1121h">
+  <link rel="stylesheet" href="styles.css?v=1121i">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -177,7 +177,7 @@
           "name": "What are your hours?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "We're open 8 AM to 8 PM, 7 days a week. We reply to orders within 24 hours."
+            "text": "We're open 8 AM to 8 PM, 7 days a week. Pickup is in 1-hour slots, and delivery is in 3-hour windows. We reply to orders within 24 hours."
           }
         }
       ]
@@ -500,7 +500,7 @@
           </fieldset>
         </div>
 
-        <p class="menu-pdf"><a class="btn btn-ghost" href="menu-holiday.pdf?v=1121h" download="SweetWalks-holiday-menu.pdf">Download the printable menu (PDF)</a></p>
+        <p class="menu-pdf"><a class="btn btn-ghost" href="menu-holiday.pdf?v=1121i" download="SweetWalks-holiday-menu.pdf">Download the printable menu (PDF)</a></p>
       </div>
     </section>
 
@@ -529,14 +529,31 @@
             <span class="date-spelled" data-date-spelled aria-live="polite"></span>
           </label>
           <label class="full">
-            <span>Time slot <span class="req">*</span></span>
+            <span data-slot-label>Pickup time (1-hour slot) <span class="req">*</span></span>
             <select name="time-slot" required>
-              <option value="">Choose a time slot</option>
-              <option value="8–11 AM">8–11 AM</option>
-              <option value="11 AM–2 PM">11 AM–2 PM</option>
-              <option value="2–5 PM">2–5 PM</option>
-              <option value="5–8 PM">5–8 PM</option>
+              <option value="">Choose a pickup time</option>
+              <optgroup label="Pickup (1-hour slots)">
+                <option value="8–9 AM">8–9 AM</option>
+                <option value="9–10 AM">9–10 AM</option>
+                <option value="10–11 AM">10–11 AM</option>
+                <option value="11 AM–12 PM">11 AM–12 PM</option>
+                <option value="12–1 PM">12–1 PM</option>
+                <option value="1–2 PM">1–2 PM</option>
+                <option value="2–3 PM">2–3 PM</option>
+                <option value="3–4 PM">3–4 PM</option>
+                <option value="4–5 PM">4–5 PM</option>
+                <option value="5–6 PM">5–6 PM</option>
+                <option value="6–7 PM">6–7 PM</option>
+                <option value="7–8 PM">7–8 PM</option>
+              </optgroup>
+              <optgroup label="Delivery (3-hour windows)">
+                <option value="8–11 AM">8–11 AM</option>
+                <option value="11 AM–2 PM">11 AM–2 PM</option>
+                <option value="2–5 PM">2–5 PM</option>
+                <option value="5–8 PM">5–8 PM</option>
+              </optgroup>
             </select>
+            <span class="hint" data-slot-hint>For pickup, choose a 1-hour slot. For delivery, choose a 3-hour window.</span>
           </label>
         </fieldset>
 
@@ -548,12 +565,21 @@
               <span>Pickup at 2801 Arden Way, Sacramento</span>
             </label>
             <label class="choice">
+              <input type="radio" name="fulfillment" value="Pickup (other)">
+              <span>Other (tell us where)</span>
+            </label>
+            <label class="choice">
               <input type="radio" name="fulfillment" value="Delivery">
               <span>Delivery</span>
             </label>
           </div>
           <p class="fieldset-note"><a href="https://www.google.com/maps/search/?api=1&amp;query=2801+Arden+Way%2C+Sacramento%2C+CA" target="_blank" rel="noopener noreferrer">Map to 2801 Arden Way</a> · <a href="#delivery">Pickup and delivery details</a></p>
           <p class="min-order-alert" data-min-note hidden role="status">Heads-up: delivery orders have a $25 minimum, and single cookies are pickup only. You can still send your request and we'll sort it out with you.</p>
+          <label class="full" data-pickup-other>
+            <span>Where would you like to pick up? <span class="req">*</span></span>
+            <textarea name="pickup-location" rows="2" placeholder="A meeting spot we can arrange"></textarea>
+            <span class="hint">Required if you choose Other. We'll confirm the spot when we confirm your order.</span>
+          </label>
           <label class="full" data-delivery-area>
             <span>Delivery address <span class="req">*</span></span>
             <textarea name="delivery-area" rows="2" autocomplete="street-address" placeholder="Street address, city, and ZIP (example: 123 Main St, Sacramento, CA 95825)"></textarea>
@@ -653,9 +679,9 @@
           <p>We bake in Sacramento and offer pickup and delivery. We do not ship at this time.</p>
         </header>
         <ul class="policy delivery-policy">
-          <li><strong>Pickup:</strong> <a href="https://www.google.com/maps/search/?api=1&amp;query=2801+Arden+Way%2C+Sacramento%2C+CA" target="_blank" rel="noopener noreferrer">2801 Arden Way, Sacramento (open map)</a>, at the date and time you schedule.</li>
+          <li><strong>Pickup:</strong> <a href="https://www.google.com/maps/search/?api=1&amp;query=2801+Arden+Way%2C+Sacramento%2C+CA" target="_blank" rel="noopener noreferrer">2801 Arden Way, Sacramento (open map)</a>, or another spot you arrange with us, at the date and 1-hour time slot you schedule.</li>
           <li><strong>We deliver to:</strong> Sacramento, Rocklin, Roseville, Placer County, and the Bay Area. We also deliver beyond these areas. Call or text <a href="tel:+19167209564">(916) 720-9564</a> to ask.</li>
-          <li>We will provide a 3-hour delivery window based on the time slot you've chosen when submitting an order.</li>
+          <li>We will provide a 3-hour delivery window based on the 3-hour window you've chosen when submitting an order.</li>
           <li>Delivery orders need a $25 minimum (a dozen cookies or brownies, or any cake or pie, qualifies). Single cookies are pickup only.</li>
           <li>All delivery fees are negotiable for every area and based on distance. Your exact fee is agreed on when we confirm your order.</li>
         </ul>
@@ -744,7 +770,7 @@
           </details>
           <details class="faq-item">
             <summary>What are your hours?</summary>
-            <p>We're open 8 AM to 8 PM, 7 days a week. We reply to orders within 24 hours.</p>
+            <p>We're open 8 AM to 8 PM, 7 days a week. Pickup is in 1-hour slots, and delivery is in 3-hour windows. We reply to orders within 24 hours.</p>
           </details>
         </div>
       </div>
@@ -862,6 +888,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1121h"></script>
+  <script src="script.js?v=1121i"></script>
 </body>
 </html>

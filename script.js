@@ -13,6 +13,9 @@
   var PHONE_DISPLAY = "(916) 720-9564";
   var PHONE_SMS = "sms:+19167209564";
   var PICKUP_VALUE = "Pickup at 2801 Arden Way, Sacramento";
+  var PICKUP_OTHER_VALUE = "Pickup (other)";
+  var PICKUP_SLOTS = ["8–9 AM", "9–10 AM", "10–11 AM", "11 AM–12 PM", "12–1 PM", "1–2 PM", "2–3 PM", "3–4 PM", "4–5 PM", "5–6 PM", "6–7 PM", "7–8 PM"];
+  var DELIVERY_SLOTS = ["8–11 AM", "11 AM–2 PM", "2–5 PM", "5–8 PM"];
   var DELIVERY_MIN = 25;
   var CAKE_SHAPES = ["Round", "Heart", "Pumpkin"];
   var CAKE_FLAVORS = ["Hot Milk", "Yellow", "Strawberry", "Vanilla", "Chocolate", "Oreo", "Lemon", "7Up", "Pineapple Upside Down"];
@@ -199,7 +202,7 @@
     if (!note) return;
     var v = (form.querySelector('input[name="fulfillment"]:checked') || {}).value;
     var show = false;
-    if (v === "Delivery" && items.length) {
+    if (isDelivery(v) && items.length) {
       var sub = 0, unpriced = false;
       items.forEach(function (i) { if (i.priced && i.total != null) sub += i.total; else unpriced = true; });
       show = !unpriced && sub < DELIVERY_MIN;
@@ -239,13 +242,66 @@
 
   // ---- Pickup / delivery ----
   var deliveryBox = form.querySelector("[data-delivery-area]");
+  var pickupOtherBox = form.querySelector("[data-pickup-other]");
+  function isDelivery(v) { return v === "Delivery"; }
+  function isPickup(v) { return !!v && v !== "Delivery"; }
+  function isPickupOther(v) { return v === PICKUP_OTHER_VALUE; }
+  function fulfillmentDisplay(ful, otherLoc) {
+    if (isPickupOther(ful) && otherLoc) return "Pickup at " + otherLoc;
+    return ful;
+  }
+  function setSlotOptions(slots, placeholder, prev) {
+    var sel = form.elements["time-slot"];
+    if (!sel) return;
+    while (sel.firstChild) sel.removeChild(sel.firstChild);
+    var first = document.createElement("option");
+    first.value = "";
+    first.textContent = placeholder;
+    sel.appendChild(first);
+    var i, op;
+    for (i = 0; i < slots.length; i++) {
+      op = document.createElement("option");
+      op.value = slots[i];
+      op.textContent = slots[i];
+      sel.appendChild(op);
+    }
+    var keep = false;
+    if (prev) {
+      for (i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === prev) { keep = true; break; }
+      }
+    }
+    sel.value = keep ? prev : "";
+    if (!keep && prev) clearFieldError(sel);
+  }
+  function syncTimeSlots() {
+    var v = (form.querySelector('input[name="fulfillment"]:checked') || {}).value;
+    var label = form.querySelector("[data-slot-label]");
+    var hint = form.querySelector("[data-slot-hint]");
+    var sel = form.elements["time-slot"];
+    var prev = sel ? sel.value : "";
+    if (hint) hint.hidden = true;
+    if (isDelivery(v)) {
+      if (label) label.innerHTML = 'Delivery window (3-hour window) <span class="req">*</span>';
+      setSlotOptions(DELIVERY_SLOTS, "Choose a delivery window", prev);
+    } else if (isPickup(v)) {
+      if (label) label.innerHTML = 'Pickup time (1-hour slot) <span class="req">*</span>';
+      setSlotOptions(PICKUP_SLOTS, "Choose a pickup time", prev);
+    } else {
+      if (label) label.innerHTML = 'Time slot <span class="req">*</span>';
+      if (hint) hint.hidden = false;
+      setSlotOptions([], "Choose pickup or delivery first", "");
+    }
+  }
   function syncFulfillment() {
     var v = (form.querySelector('input[name="fulfillment"]:checked') || {}).value;
-    deliveryBox.hidden = v !== "Delivery";
+    if (deliveryBox) deliveryBox.hidden = !isDelivery(v);
+    if (pickupOtherBox) pickupOtherBox.hidden = !isPickupOther(v);
     form.querySelectorAll(".choice").forEach(function (label) {
       var input = label.querySelector("input");
       label.classList.toggle("is-checked", !!(input && input.checked));
     });
+    syncTimeSlots();
     updateEstimate();
   }
   form.addEventListener("change", function (e) {
@@ -351,14 +407,16 @@
       var t = new Date(); t.setHours(0, 0, 0, 0);
       return d >= t;
     }, "Please choose the date you need your order (today or later).");
-    need("time-slot", function (v) { return !!v; }, "Please choose a time slot.");
+    need("time-slot", function (v) { return !!v; }, isDelivery((form.querySelector('input[name="fulfillment"]:checked') || {}).value) ? "Please choose a delivery window." : "Please choose a pickup time.");
     var ful = form.querySelector('input[name="fulfillment"]:checked');
     if (!ful) {
       var cr = form.querySelector(".fulfillment .choice-row");
       cr.classList.add("has-error");
       problems.push([cr, "Please choose pickup or delivery."]);
-    } else if (ful.value === "Delivery") {
+    } else if (isDelivery(ful.value)) {
       need("delivery-area", function (v) { return v.length >= 8 && /\d/.test(v); }, "Please enter the full delivery address: street, city, and ZIP.");
+    } else if (isPickupOther(ful.value)) {
+      need("pickup-location", function (v) { return v.length >= 2; }, "Please tell us where you would like to pick up.");
     }
     need("name", function (v) { return v.replace(/[^A-Za-z]/g, "").length >= 2; }, "Please enter your full name.");
     need("phone", function (v) { return v.replace(/\D/g, "").length >= 10; }, "Please enter a phone number with area code.");
@@ -389,6 +447,7 @@
   // ---- Order text (email body, Instagram, text message, copy) ----
   function orderInfo() {
     var ful = (form.querySelector('input[name="fulfillment"]:checked') || {}).value || "";
+    var otherLoc = isPickupOther(ful) ? val("pickup-location") : "";
     return {
       items: cartItems(),
       custom: val("custom"),
@@ -398,8 +457,10 @@
       dateISO: val("date-needed"),
       date: spellDate(val("date-needed")),
       slot: val("time-slot"),
-      fulfillment: ful,
-      address: ful === "Delivery" ? val("delivery-area") : "",
+      fulfillmentValue: ful,
+      fulfillment: fulfillmentDisplay(ful, otherLoc),
+      pickupLocation: otherLoc,
+      address: isDelivery(ful) ? val("delivery-area") : "",
       allergies: noAllergy.checked ? "None" : val("allergies"),
       notes: val("notes")
     };
@@ -414,7 +475,8 @@
     if (!o.items.length) lines.push("- (none, see custom request)");
     if (o.items.length) lines.push("Estimated total: " + money(sum) + (unpriced ? ", plus items priced when you order" : ""));
     if (o.custom) lines.push("", "Custom request: " + o.custom);
-    lines.push("", "Date needed: " + o.date, "Time slot: " + o.slot, "Pickup or delivery: " + o.fulfillment);
+    lines.push("", "Date needed: " + o.date, (isDelivery(o.fulfillmentValue || o.fulfillment) ? "Delivery window: " : "Pickup time: ") + o.slot, "Pickup or delivery: " + o.fulfillment);
+    if (o.pickupLocation) lines.push("Pickup location: " + o.pickupLocation);
     if (o.address) lines.push("Delivery address: " + o.address);
     lines.push("Allergies: " + o.allergies, "", "Name: " + o.name, "Phone: " + o.phone, "Email: " + o.email);
     if (o.notes) lines.push("Notes: " + o.notes);
@@ -435,6 +497,7 @@
       date_needed: o.date,
       time_slot: o.slot,
       fulfillment: o.fulfillment,
+      pickup_location: o.pickupLocation,
       delivery_address: o.address,
       items: o.items.map(function (i) { return i.text + (i.priced && i.total != null ? " (" + money(i.total) + ")" : " (priced when you order)"); }).join("\n"),
       custom_request: o.custom,
@@ -491,7 +554,7 @@
   function showSuccess(o) {
     failBox.hidden = true;
     okBox.querySelector("[data-send-ok-text]").textContent =
-      "Thank you, " + (o.name.split(" ")[0] || "friend") + "! Your order request for " + o.date + " (" + o.slot + ") is in. We'll text you at " + o.phone + " within 24 hours to confirm your total and deposit.";
+      "Thank you, " + (o.name.split(" ")[0] || "friend") + "! Your order request for " + o.date + " (" + o.slot + ")" + (o.pickupLocation ? ", pickup at " + o.pickupLocation : "") + " is in. We'll text you at " + o.phone + " within 24 hours to confirm your total and deposit.";
     var ul = okBox.querySelector("[data-send-ok-lines]");
     ul.innerHTML = "";
     o.items.forEach(function (i) { var li = document.createElement("li"); li.textContent = i.text; ul.appendChild(li); });
@@ -623,9 +686,24 @@
     try {
       var data = JSON.parse(localStorage.getItem(SAVED_KEY) || "null");
       if (!data || typeof data !== "object") return null;
-      if (data.contact && data.contact.fulfillment && data.contact.fulfillment !== "Delivery") {
-        data.contact.fulfillment = PICKUP_VALUE;
-        data.contact.deliveryArea = "";
+      if (data.contact && data.contact.fulfillment) {
+        var f = data.contact.fulfillment;
+        if (f === "Delivery") {
+          data.contact.pickupLocation = "";
+        } else if (f === PICKUP_OTHER_VALUE || data.contact.pickupLocation) {
+          data.contact.fulfillment = PICKUP_OTHER_VALUE;
+          if (!data.contact.pickupLocation && f.indexOf("Pickup at ") === 0 && f !== PICKUP_VALUE) {
+            data.contact.pickupLocation = f.slice(10);
+          }
+          data.contact.deliveryArea = "";
+        } else if (f.indexOf("Pickup at ") === 0 && f !== PICKUP_VALUE) {
+          data.contact.fulfillment = PICKUP_OTHER_VALUE;
+          data.contact.pickupLocation = data.contact.pickupLocation || f.slice(10);
+          data.contact.deliveryArea = "";
+        } else {
+          data.contact.fulfillment = PICKUP_VALUE;
+          data.contact.deliveryArea = "";
+        }
       }
       if (data.lastOrder && data.lastOrder.items) {
         data.lastOrder.items = data.lastOrder.items.map(function (i) { return i && i.key ? i : (i ? keyFromOld(i) : null); }).filter(Boolean);
@@ -646,7 +724,7 @@
   function saveRemembered(o) {
     if (!form.elements["remember-info"].checked) { clearSaved(); reorderCard.hidden = true; updateClearLink(); return; }
     writeSaved({
-      contact: { name: o.name, phone: o.phone, email: o.email, fulfillment: o.fulfillment, deliveryArea: o.address },
+      contact: { name: o.name, phone: o.phone, email: o.email, fulfillment: o.fulfillmentValue || o.fulfillment, deliveryArea: o.address, pickupLocation: o.pickupLocation || "" },
       lastOrder: {
         items: o.items.map(function (i) { return { key: i.key, qty: i.qty, text: i.text, details: i.details }; }),
         custom: o.custom,
@@ -662,8 +740,15 @@
     ["name", "phone", "email"].forEach(function (k) { if (c[k] && form.elements[k]) form.elements[k].value = c[k]; });
     if (c.fulfillment) {
       form.querySelectorAll('input[name="fulfillment"]').forEach(function (r) { r.checked = r.value === c.fulfillment; });
-      if (!form.querySelector('input[name="fulfillment"]:checked')) form.querySelector('input[name="fulfillment"]').checked = true;
+      if (!form.querySelector('input[name="fulfillment"]:checked')) {
+        if (c.pickupLocation) {
+          var otherRadio = form.querySelector('input[name="fulfillment"][value="' + PICKUP_OTHER_VALUE + '"]');
+          if (otherRadio) otherRadio.checked = true;
+        }
+        if (!form.querySelector('input[name="fulfillment"]:checked')) form.querySelector('input[name="fulfillment"]').checked = true;
+      }
     }
+    if (c.pickupLocation && form.elements["pickup-location"]) form.elements["pickup-location"].value = c.pickupLocation;
     if (c.deliveryArea) form.elements["delivery-area"].value = c.deliveryArea;
   }
   function renderReorder(d) {
@@ -705,7 +790,7 @@
   });
   clearBtn.addEventListener("click", function () {
     clearSaved();
-    ["name", "phone", "email", "delivery-area"].forEach(function (k) { form.elements[k].value = ""; });
+    ["name", "phone", "email", "delivery-area", "pickup-location"].forEach(function (k) { if (form.elements[k]) form.elements[k].value = ""; });
     form.querySelector('input[name="fulfillment"]').checked = true;
     syncFulfillment();
     reorderCard.hidden = true;
@@ -731,7 +816,7 @@
     if (hero) new IntersectionObserver(function (en) { hide.hero = en[0].isIntersecting; sync(); }, { threshold: 0, rootMargin: "-80px 0px -90px 0px" }).observe(hero);
   }
 
-  window.swOrderDebug = { cartItems: cartItems, spellDate: spellDate };
+  window.swOrderDebug = { cartItems: cartItems, spellDate: spellDate, orderInfo: orderInfo, orderText: orderText };
 })();
 
 
