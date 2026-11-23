@@ -33,7 +33,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1121i">
+  <script>
+    if (window.navigator.standalone) document.documentElement.classList.add("is-standalone");
+    else if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) document.documentElement.classList.add("is-standalone");
+  </script>
+  <link rel="stylesheet" href="styles.css?v=1122a">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -500,7 +504,7 @@
           </fieldset>
         </div>
 
-        <p class="menu-pdf"><a class="btn btn-ghost" href="menu-holiday.pdf?v=1121i" download="SweetWalks-holiday-menu.pdf">Download the printable menu (PDF)</a></p>
+        <p class="menu-pdf"><a class="btn btn-ghost" href="menu-holiday.pdf?v=1122a" download="SweetWalks-holiday-menu.pdf">Download the printable menu (PDF)</a></p>
       </div>
     </section>
 
@@ -883,11 +887,38 @@
         <a href="https://ig.me/m/sweetwalks_bake" rel="noopener noreferrer" target="_blank">@sweetwalks_bake</a>
       </p>
       <p class="footer-survey"><a href="https://forms.gle/7Ls2SYGRbaCGfgkp8" rel="noopener noreferrer" target="_blank">Ordered from us? Take our customer survey</a></p>
+      <p class="footer-install"><button type="button" class="install-footer-btn" data-install-open>Add SweetWalks to your home screen</button></p>
     </div>
   </footer>
 
+  <div class="install-banner" data-install-banner hidden>
+    <button type="button" class="install-banner-action" data-install-action>Add SweetWalks to your home screen</button>
+    <button type="button" class="install-banner-dismiss" data-install-dismiss aria-label="Dismiss">&times;</button>
+  </div>
+
+  <div class="install-sheet" data-install-sheet hidden role="dialog" aria-modal="true" aria-labelledby="install-sheet-title">
+    <div class="install-sheet-box">
+      <button type="button" class="install-sheet-close" data-install-sheet-close aria-label="Close">&times;</button>
+      <h2 id="install-sheet-title">Add SweetWalks to your home screen</h2>
+      <div data-install-safari-steps>
+        <ol class="install-steps">
+          <li>Tap the Share button <svg class="install-share-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12M8 7l4-4 4 4M6 11v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8"></path></svg></li>
+          <li>Scroll and tap <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong>.</li>
+        </ol>
+      </div>
+      <div data-install-ios-other hidden>
+        <p class="install-sheet-note">Open this page in Safari first. Then tap Share, Add to Home Screen, and Add.</p>
+      </div>
+      <div data-install-generic hidden>
+        <p class="install-sheet-note">On an iPhone or iPad, open this page in Safari, tap the Share button, then Add to Home Screen, then Add.</p>
+        <p class="install-sheet-note">On Android, open this page in Chrome or Edge. If you see Install the SweetWalks app, tap it. You can also use the Install option in the browser menu.</p>
+      </div>
+    </div>
+  </div>
+
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1121i"></script>
+  <script src="script.js?v=1122a"></script>
 </body>
 </html>

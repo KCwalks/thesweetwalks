@@ -1809,7 +1809,7 @@ body { font-size: 1rem; line-height: 1.6; background-image: none; }
 body::before { background: linear-gradient(90deg, #a03651, #e36c8a 35%, #abd2bf 50%, #e36c8a 65%, #a03651); }
 .hint, .note, .fieldset-note, .legal, .form-help, .testimonials-note, .reply-time,
 .order-form label span, .required-note, .allergen-note, .min-order-alert, .cart-remove,
-.footer-contact, .footer-survey, .pay-card .hint, .pay-business, .faq-item p, .policy li { font-size: 1rem; }
+.footer-contact, .footer-survey, .footer-install, .pay-card .hint, .pay-business, .faq-item p, .policy li { font-size: 1rem; }
 .order-form .field-error { font-size: 1rem; }
 .eyebrow, .banner-kicker { font-size: 0.85rem; }
 .btn { min-height: 52px; font-size: 1.05rem; }
@@ -1964,3 +1964,161 @@ html.no-flexgap .promo-inner > * { margin: 0.2rem 0.5rem; }
 html.no-flexgap .order-form label > * + * { margin-top: 0.3rem; }
 html.no-flexgap .item-info > * + * { margin-top: 0.1rem; }
 html.no-flexgap .email-chooser-options > * + * { margin-top: 0.6rem; }
+
+
+/* Add SweetWalks to the home screen / install the app */
+@media (display-mode: standalone) {
+  .install-banner,
+  .install-sheet,
+  .footer-install { display: none !important; }
+}
+html.is-standalone .install-banner,
+html.is-standalone .install-sheet,
+html.is-standalone .footer-install { display: none !important; }
+
+.footer-install { margin-top: 0.35rem; }
+.footer-install .install-footer-btn {
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--burgundy);
+  background: none;
+  border: 0;
+  padding: 0.5rem 0.2rem;
+  min-height: 44px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.footer-install .install-footer-btn:hover,
+.footer-install .install-footer-btn:focus-visible { color: var(--pumpkin-deep); }
+
+.install-banner {
+  position: fixed;
+  left: max(0.6rem, env(safe-area-inset-left, 0px));
+  right: auto;
+  bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  z-index: 48;
+  max-width: calc(100% - 9.25rem);
+  background: var(--white);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: 1.15rem;
+  box-shadow: 0 8px 24px rgba(90, 45, 30, 0.16);
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.install-banner[hidden] { display: none !important; }
+body.nav-open .install-banner {
+  opacity: 0;
+  pointer-events: none;
+}
+.install-banner-action {
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.25;
+  color: var(--burgundy);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0.35rem 0.15rem;
+  min-height: 44px;
+  cursor: pointer;
+  text-align: left;
+  margin-right: 0.1rem;
+}
+.install-banner-action:hover,
+.install-banner-action:focus-visible { color: var(--pumpkin-deep); filter: none; }
+.install-banner-dismiss {
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  background: none;
+  border: 0;
+  color: var(--cocoa-soft);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0;
+}
+
+.install-sheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  background: rgba(58, 36, 24, 0.55);
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: flex-end;
+  align-items: flex-end;
+  -webkit-justify-content: center;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+.install-sheet[hidden] { display: none !important; }
+.install-sheet-box {
+  position: relative;
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 18px;
+  padding: 1.5rem 1.25rem 1.35rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  text-align: left;
+}
+.install-sheet-box h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  margin: 0 1.8rem 0.9rem 0;
+  color: var(--ink);
+}
+.install-sheet-close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.35rem;
+  background: none;
+  border: 0;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--cocoa);
+  min-width: 44px;
+  min-height: 44px;
+}
+.install-steps {
+  margin: 0;
+  padding: 0 0 0 1.25rem;
+}
+.install-steps li { margin: 0 0 0.75rem; }
+.install-steps li:last-child { margin-bottom: 0; }
+.install-share-icon {
+  display: inline-block;
+  vertical-align: -0.35em;
+  margin: 0 0.2rem;
+  color: var(--burgundy);
+}
+.install-sheet-note { margin: 0 0 0.85rem; }
+.install-sheet-note:last-child { margin-bottom: 0; }
+
+@media (min-width: 768px) {
+  .install-sheet {
+    -webkit-align-items: center;
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .install-banner,
+  .install-sheet { transition: none; }
+}

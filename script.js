@@ -1022,3 +1022,189 @@
     navigator.serviceWorker.register("/sw.js").catch(function () {});
   });
 })();
+
+
+// Add SweetWalks to the home screen: Android/Chrome install prompt, iPhone steps.
+(function () {
+  var DISMISS_KEY = "sweetwalks-install-dismissed";
+  var DISMISS_MS = 14 * 24 * 60 * 60 * 1000;
+  var deferredPrompt = null;
+  var banner = document.querySelector("[data-install-banner]");
+  var bannerBtn = document.querySelector("[data-install-action]");
+  var dismissBtn = document.querySelector("[data-install-dismiss]");
+  var footerBtn = document.querySelector("[data-install-open]");
+  var footerWrap = document.querySelector(".footer-install");
+  var sheet = document.querySelector("[data-install-sheet]");
+  var sheetClose = sheet ? sheet.querySelector("[data-install-sheet-close]") : null;
+  var safariSteps = sheet ? sheet.querySelector("[data-install-safari-steps]") : null;
+  var iosOtherSteps = sheet ? sheet.querySelector("[data-install-ios-other]") : null;
+  var genericSteps = sheet ? sheet.querySelector("[data-install-generic]") : null;
+  var lastFocus = null;
+
+  function isStandalone() {
+    if (window.navigator.standalone === true) return true;
+    if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+    return false;
+  }
+
+  function isIos() {
+    var ua = navigator.userAgent || "";
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    if (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) return true;
+    return false;
+  }
+
+  function isIosSafari() {
+    var ua = navigator.userAgent || "";
+    if (!isIos()) return false;
+    if (/CriOS|FxiOS|OPiOS|EdgiOS|mercury|GSA\/|DuckDuckGo|Instagram|FBAN|FBAV|FBIOS|Line\/|LinkedIn|Twitter|Snapchat|Pinterest|TikTok|Bytedance|musical_ly/.test(ua)) {
+      return false;
+    }
+    return /Safari/.test(ua);
+  }
+
+  function isMobileViewport() {
+    return !(window.matchMedia && window.matchMedia("(min-width: 1100px)").matches);
+  }
+
+  function dismissedRecently() {
+    try {
+      var raw = localStorage.getItem(DISMISS_KEY);
+      if (!raw) return false;
+      var t = parseInt(raw, 10);
+      if (!t) return false;
+      return (Date.now() - t) < DISMISS_MS;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function rememberDismiss() {
+    try {
+      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    } catch (err) {}
+  }
+
+  function setBannerLabel(label) {
+    if (bannerBtn) bannerBtn.textContent = label;
+  }
+
+  function showBanner() {
+    if (!banner || !isMobileViewport() || dismissedRecently() || isStandalone()) return;
+    banner.hidden = false;
+  }
+
+  function hideBanner() {
+    if (banner) banner.hidden = true;
+  }
+
+  function hideAllInstallUi() {
+    hideBanner();
+    if (footerWrap) footerWrap.hidden = true;
+    closeSheet();
+  }
+
+  function setSheetMode(mode) {
+    if (safariSteps) safariSteps.hidden = mode !== "ios-safari";
+    if (iosOtherSteps) iosOtherSteps.hidden = mode !== "ios-other";
+    if (genericSteps) genericSteps.hidden = mode !== "generic";
+  }
+
+  function openSheet(mode) {
+    if (!sheet) return;
+    lastFocus = document.activeElement;
+    setSheetMode(mode);
+    sheet.hidden = false;
+    if (sheetClose && sheetClose.focus) sheetClose.focus();
+  }
+
+  function closeSheet() {
+    if (!sheet || sheet.hidden) return;
+    sheet.hidden = true;
+    if (lastFocus && lastFocus.focus) {
+      try { lastFocus.focus(); } catch (err) {}
+    }
+  }
+
+  function runAndroidPrompt() {
+    var ev = deferredPrompt;
+    if (!ev) return;
+    deferredPrompt = null;
+    hideBanner();
+    ev.prompt();
+  }
+
+  function openHelp() {
+    if (deferredPrompt) {
+      runAndroidPrompt();
+      return;
+    }
+    if (isIos()) {
+      openSheet(isIosSafari() ? "ios-safari" : "ios-other");
+      return;
+    }
+    openSheet("generic");
+  }
+
+  if (isStandalone()) {
+    document.documentElement.classList.add("is-standalone");
+    hideAllInstallUi();
+    return;
+  }
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    setBannerLabel("Install the SweetWalks app");
+    showBanner();
+  });
+
+  window.addEventListener("appinstalled", function () {
+    deferredPrompt = null;
+    hideAllInstallUi();
+  });
+
+  if (isIos()) {
+    setBannerLabel("Add SweetWalks to your home screen");
+    showBanner();
+  }
+
+  if (bannerBtn) {
+    bannerBtn.addEventListener("click", function () {
+      if (deferredPrompt) runAndroidPrompt();
+      else openHelp();
+    });
+  }
+  if (dismissBtn) {
+    dismissBtn.addEventListener("click", function () {
+      rememberDismiss();
+      hideBanner();
+    });
+  }
+  if (footerBtn) {
+    footerBtn.addEventListener("click", function () {
+      openHelp();
+    });
+  }
+  if (sheet) {
+    sheet.addEventListener("click", function (e) {
+      var t = e.target;
+      if (t === sheet) { closeSheet(); return; }
+      if (t && t.closest && t.closest("[data-install-sheet-close]")) closeSheet();
+    });
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeSheet();
+  });
+  window.addEventListener("resize", function () {
+    if (isStandalone()) {
+      hideAllInstallUi();
+      return;
+    }
+    if (!isMobileViewport()) {
+      hideBanner();
+      return;
+    }
+    if ((deferredPrompt || isIos()) && !dismissedRecently()) showBanner();
+  });
+})();
