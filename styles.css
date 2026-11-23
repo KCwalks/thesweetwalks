@@ -2122,3 +2122,72 @@ body.nav-open .install-banner {
   .install-banner,
   .install-sheet { transition: none; }
 }
+
+
+/* Chocolate Chip with nuts: nut picker */
+html.no-js .nut-picker[hidden],
+html.no-js .nut-other-field[hidden] { display: block !important; }
+.nut-picker {
+  grid-column: 1 / -1;
+  margin-top: 0.15rem;
+  padding: 0.7rem 0.85rem 0.8rem;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 0.9rem;
+}
+.nut-picker[hidden] { display: none !important; }
+.nut-picker.has-error { border-color: #a3261b; box-shadow: 0 0 0 3px rgba(163, 38, 27, 0.25); }
+.nut-picker-legend { margin: 0 0 0.2rem; font-weight: 700; color: var(--ink); }
+.nut-picker-hint { margin: 0 0 0.5rem; color: var(--cocoa-soft); }
+.nut-choices {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+.order-form label.nut-choice,
+.nut-choice {
+  display: inline-flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-align-items: center;
+  align-items: center;
+  min-height: 44px;
+  min-width: auto;
+  margin: 0 0.9rem 0.1rem 0;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--ink);
+  gap: 0.4rem;
+}
+.order-form label.nut-choice input,
+.nut-choice input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--mint-deep);
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+}
+@supports not (inset: 0) {
+  .order-form label.nut-choice > * + *,
+  .nut-choice > * + * { margin-top: 0; margin-left: 0.4rem; }
+}
+.nut-other-field {
+  display: block;
+  margin-top: 0.45rem;
+}
+.nut-other-field[hidden] { display: none !important; }
+.nut-other-field span { display: block; font-weight: 700; margin-bottom: 0.3rem; }
+.nut-other-field input {
+  width: 100%;
+  max-width: 24rem;
+  min-height: 48px;
+  font: inherit;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid var(--line);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+.estimate-extra { color: var(--cocoa-soft); font-size: 1rem; }

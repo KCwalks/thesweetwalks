@@ -17,6 +17,8 @@
   var PICKUP_SLOTS = ["8–9 AM", "9–10 AM", "10–11 AM", "11 AM–12 PM", "12–1 PM", "1–2 PM", "2–3 PM", "3–4 PM", "4–5 PM", "5–6 PM", "6–7 PM", "7–8 PM"];
   var DELIVERY_SLOTS = ["8–11 AM", "11 AM–2 PM", "2–5 PM", "5–8 PM"];
   var DELIVERY_MIN = 25;
+  var NUT_ITEM_KEY = "cookie-cc-nuts";
+  var EXTRA_NUT_EACH = 2;
   var CAKE_SHAPES = ["Round", "Heart", "Pumpkin"];
   var CAKE_FLAVORS = ["Hot Milk", "Yellow", "Strawberry", "Vanilla", "Chocolate", "Oreo", "Lemon", "7Up", "Pineapple Upside Down"];
   var MAX_QTY = 240;
@@ -81,6 +83,50 @@
     syncRow(row);
   }
 
+  function isNutRow(row) {
+    return row && row.getAttribute("data-key") === NUT_ITEM_KEY;
+  }
+  function readNutChoices(row) {
+    var picks = [];
+    var otherText = "";
+    var otherChecked = false;
+    if (!row) return { picks: picks, otherText: otherText, otherChecked: otherChecked };
+    var boxes = row.querySelectorAll('[data-nut-picker] input[name="nut-choice"]:checked');
+    var otherInput = row.querySelector('input[name="nut-other"]');
+    Array.prototype.forEach.call(boxes, function (cb) {
+      if (cb.value === "Other") {
+        otherChecked = true;
+        otherText = (otherInput && otherInput.value || "").trim();
+        picks.push(otherText ? "Other: " + otherText : "Other");
+      } else {
+        picks.push(cb.value);
+      }
+    });
+    return { picks: picks, otherText: otherText, otherChecked: otherChecked };
+  }
+  function extraNutCount(picks) {
+    return Math.max(0, (picks && picks.length || 0) - 1);
+  }
+  function extraNutChargeFor(picks, qty) {
+    return extraNutCount(picks) * EXTRA_NUT_EACH * qty;
+  }
+  function extraNutsLine(extraCount, qty) {
+    var noun = qty === 1 ? "cookie" : "cookies";
+    return "Extra nuts (" + extraCount + " x " + qty + " " + noun + "): " + money(extraCount * EXTRA_NUT_EACH * qty);
+  }
+  function syncNutPicker(row) {
+    if (!isNutRow(row)) return;
+    var picker = row.querySelector("[data-nut-picker]");
+    var otherBox = row.querySelector("[data-nut-other]");
+    if (!picker) return;
+    var on = qtyOf(row) > 0;
+    picker.hidden = !on;
+    if (otherBox) {
+      var otherCb = picker.querySelector('input[name="nut-choice"][value="Other"]');
+      otherBox.hidden = !(on && otherCb && otherCb.checked);
+    }
+  }
+
   function selectHtml(cls, label, options, current) {
     return '<label class="detail-field"><span>' + label + ' <span class="req">*</span></span><select class="' + cls + '">' +
       '<option value="">Choose</option>' +
@@ -106,6 +152,7 @@
   function syncRow(row) {
     row.classList.toggle("is-picked", qtyOf(row) > 0);
     syncDetails(row);
+    syncNutPicker(row);
     updateEstimate();
   }
 
@@ -150,6 +197,16 @@
         });
         if (parts.length) item.text += " (" + parts.join("; ") + ")";
       }
+      if (isNutRow(row) && item.priced && item.total != null) {
+        var nuts = readNutChoices(row);
+        item.nutChoices = nuts.picks;
+        item.nutOther = nuts.otherText;
+        item.extraNuts = extraNutCount(nuts.picks);
+        item.extraNutCharge = extraNutChargeFor(nuts.picks, n);
+        item.baseTotal = item.total;
+        item.total = item.baseTotal + item.extraNutCharge;
+        if (nuts.picks.length) item.text += " (" + nuts.picks.join(", ") + ")";
+      }
       items.push(item);
     });
     return items;
@@ -170,7 +227,8 @@
       var right = document.createElement("span");
       right.className = "cart-right";
       var price = document.createElement("span");
-      if (item.priced && item.total != null) { price.textContent = money(item.total); sum += item.total; }
+      var shown = item.baseTotal != null ? item.baseTotal : item.total;
+      if (item.priced && item.total != null) { price.textContent = money(shown); sum += item.total; }
       else { price.textContent = "Priced when you order"; unpriced = true; }
       var rm = document.createElement("button");
       rm.type = "button";
@@ -183,6 +241,18 @@
       li.appendChild(left);
       li.appendChild(right);
       list.appendChild(li);
+      if (item.extraNutCharge > 0) {
+        var liX = document.createElement("li");
+        liX.className = "estimate-extra";
+        var leftX = document.createElement("span");
+        var noun = item.qty === 1 ? "cookie" : "cookies";
+        leftX.textContent = "Extra nuts (" + item.extraNuts + " x " + item.qty + " " + noun + ")";
+        var rightX = document.createElement("span");
+        rightX.textContent = money(item.extraNutCharge);
+        liX.appendChild(leftX);
+        liX.appendChild(rightX);
+        list.appendChild(liX);
+      }
     });
     totalEl.hidden = items.length === 0;
     totalEl.textContent = "Estimated total: " + money(sum) + (unpriced ? ", plus items priced when you order" : "");
@@ -228,6 +298,9 @@
     if (e.target.classList.contains("qty")) {
       syncRow(e.target.closest(".item-row"));
       clearItemsError();
+    } else if (e.target.name === "nut-other") {
+      clearFieldError(e.target);
+      updateEstimate();
     }
   });
   form.addEventListener("change", function (e) {
@@ -236,6 +309,15 @@
       setQty(row, qtyOf(row));
     } else if (e.target.closest(".item-details")) {
       clearFieldError(e.target);
+      updateEstimate();
+    } else if (e.target.closest("[data-nut-picker]")) {
+      var nutRow = e.target.closest(".item-row");
+      syncNutPicker(nutRow);
+      if (e.target.getAttribute && e.target.getAttribute("aria-invalid")) clearFieldError(e.target);
+      var picker = nutRow && nutRow.querySelector("[data-nut-picker]");
+      if (picker) picker.classList.remove("has-error");
+      var nerr = picker && picker.querySelector(".field-error");
+      if (nerr && nerr.parentNode === picker) nerr.parentNode.removeChild(nerr);
       updateEstimate();
     }
   });
@@ -371,6 +453,11 @@
   function clearAllErrors() {
     form.querySelectorAll("[aria-invalid]").forEach(clearFieldError);
     form.querySelectorAll(".has-error").forEach(function (n) { n.classList.remove("has-error"); });
+    var nutPicker = form.querySelector("[data-nut-picker]");
+    if (nutPicker) {
+      var nerr = nutPicker.querySelector(".field-error");
+      if (nerr) nerr.parentNode.removeChild(nerr);
+    }
     clearItemsError();
     var fe = form.querySelector("[data-form-error]");
     fe.hidden = true;
@@ -389,6 +476,26 @@
       em.textContent = "Your order is empty. Tap + next to at least one treat on the Menu, or write a custom request.";
       box.appendChild(em);
       problems.push([box, "Pick at least one treat (tap + on the Menu) or write a custom request."]);
+    }
+    var nutsRow = form.querySelector('.item-row[data-key="' + NUT_ITEM_KEY + '"]');
+    if (nutsRow && qtyOf(nutsRow) > 0) {
+      var nuts = readNutChoices(nutsRow);
+      var picker = nutsRow.querySelector("[data-nut-picker]");
+      var otherInput = nutsRow.querySelector('input[name="nut-other"]');
+      if (!nuts.picks.length) {
+        if (picker) {
+          picker.classList.add("has-error");
+          var nerr = picker.querySelector(".field-error");
+          if (!nerr) { nerr = document.createElement("em"); nerr.className = "field-error"; picker.appendChild(nerr); }
+          nerr.textContent = "Please choose at least one nut.";
+          var firstCb = picker.querySelector('input[name="nut-choice"]');
+          if (firstCb) firstCb.setAttribute("aria-invalid", "true");
+        }
+        problems.push([picker || nutsRow, "Please choose at least one nut for Chocolate Chip with nuts."]);
+      } else if (nuts.otherChecked && nuts.otherText.length < 2) {
+        if (otherInput) setFieldError(otherInput, "Please tell us which nut.");
+        problems.push([otherInput || picker || nutsRow, "Please tell us which nut you would like (Other)."]);
+      }
     }
     form.querySelectorAll(".item-row .detail-line").forEach(function (line) {
       var title = line.querySelector(".detail-title").textContent;
@@ -469,7 +576,9 @@
     var lines = ["Hi SweetWalks! I'd like to place an order.", "", "Items:"];
     var sum = 0, unpriced = false;
     o.items.forEach(function (i) {
-      lines.push("- " + i.text + (i.priced && i.total != null ? " (" + money(i.total) + ")" : " (priced when you order)"));
+      var shown = i.baseTotal != null ? i.baseTotal : i.total;
+      lines.push("- " + i.text + (i.priced && shown != null ? " (" + money(shown) + ")" : " (priced when you order)"));
+      if (i.extraNutCharge > 0) lines.push("- " + extraNutsLine(i.extraNuts, i.qty));
       if (i.priced && i.total != null) sum += i.total; else unpriced = true;
     });
     if (!o.items.length) lines.push("- (none, see custom request)");
@@ -499,13 +608,24 @@
       fulfillment: o.fulfillment,
       pickup_location: o.pickupLocation,
       delivery_address: o.address,
-      items: o.items.map(function (i) { return i.text + (i.priced && i.total != null ? " (" + money(i.total) + ")" : " (priced when you order)"); }).join("\n"),
+      items: o.items.map(function (i) {
+        var shown = i.baseTotal != null ? i.baseTotal : i.total;
+        var line = i.text + (i.priced && shown != null ? " (" + money(shown) + ")" : " (priced when you order)");
+        if (i.extraNutCharge > 0) line += "\n" + extraNutsLine(i.extraNuts, i.qty);
+        return line;
+      }).join("\n"),
       custom_request: o.custom,
       allergies: o.allergies,
       notes: o.notes,
       message: body
     };
     if (o.email) data._replyto = o.email;
+    var nutItem = null;
+    o.items.forEach(function (i) { if (i.key === NUT_ITEM_KEY) nutItem = i; });
+    if (nutItem) {
+      data.nut_choices = (nutItem.nutChoices || []).join(", ");
+      data.extra_nut_charge = money(nutItem.extraNutCharge || 0);
+    }
     return data;
   }
 
@@ -557,7 +677,16 @@
       "Thank you, " + (o.name.split(" ")[0] || "friend") + "! Your order request for " + o.date + " (" + o.slot + ")" + (o.pickupLocation ? ", pickup at " + o.pickupLocation : "") + " is in. We'll text you at " + o.phone + " within 24 hours to confirm your total and deposit.";
     var ul = okBox.querySelector("[data-send-ok-lines]");
     ul.innerHTML = "";
-    o.items.forEach(function (i) { var li = document.createElement("li"); li.textContent = i.text; ul.appendChild(li); });
+    o.items.forEach(function (i) {
+      var li = document.createElement("li");
+      li.textContent = i.text;
+      ul.appendChild(li);
+      if (i.extraNutCharge > 0) {
+        var liX = document.createElement("li");
+        liX.textContent = extraNutsLine(i.extraNuts, i.qty);
+        ul.appendChild(liX);
+      }
+    });
     if (o.custom) { var li = document.createElement("li"); li.textContent = "Custom request: " + o.custom; ul.appendChild(li); }
     okBox.hidden = false;
     okBox.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -726,7 +855,7 @@
     writeSaved({
       contact: { name: o.name, phone: o.phone, email: o.email, fulfillment: o.fulfillmentValue || o.fulfillment, deliveryArea: o.address, pickupLocation: o.pickupLocation || "" },
       lastOrder: {
-        items: o.items.map(function (i) { return { key: i.key, qty: i.qty, text: i.text, details: i.details }; }),
+        items: o.items.map(function (i) { return { key: i.key, qty: i.qty, text: i.text, details: i.details, nutChoices: i.nutChoices, nutOther: i.nutOther }; }),
         custom: o.custom,
         timeSlot: o.slot,
         dateNeeded: o.date,
@@ -766,6 +895,27 @@
       var r = form.querySelector('.item-row[data-key="' + i.key + '"]');
       if (!r) return;
       setQty(r, i.qty);
+      if (isNutRow(r)) {
+        var picker = r.querySelector("[data-nut-picker]");
+        if (picker) {
+          var wanted = {};
+          var otherText = i.nutOther || "";
+          (i.nutChoices || []).forEach(function (label) {
+            if (label.indexOf("Other") === 0) {
+              wanted.Other = true;
+              if (!otherText && label.indexOf("Other: ") === 0) otherText = label.slice(7);
+            } else {
+              wanted[label] = true;
+            }
+          });
+          Array.prototype.forEach.call(picker.querySelectorAll('input[name="nut-choice"]'), function (cb) {
+            cb.checked = !!wanted[cb.value];
+          });
+          var otherInput = r.querySelector('input[name="nut-other"]');
+          if (otherInput) otherInput.value = otherText;
+          syncNutPicker(r);
+        }
+      }
       var lines = r.querySelectorAll(".detail-line");
       (i.details || []).forEach(function (det, idx) {
         if (!lines[idx] || !det) return;
@@ -816,7 +966,7 @@
     if (hero) new IntersectionObserver(function (en) { hide.hero = en[0].isIntersecting; sync(); }, { threshold: 0, rootMargin: "-80px 0px -90px 0px" }).observe(hero);
   }
 
-  window.swOrderDebug = { cartItems: cartItems, spellDate: spellDate, orderInfo: orderInfo, orderText: orderText };
+  window.swOrderDebug = { cartItems: cartItems, spellDate: spellDate, orderInfo: orderInfo, orderText: orderText, payload: payload, extraNutsLine: extraNutsLine };
 })();
 
 

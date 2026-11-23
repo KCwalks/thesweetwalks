@@ -37,7 +37,7 @@
     if (window.navigator.standalone) document.documentElement.classList.add("is-standalone");
     else if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) document.documentElement.classList.add("is-standalone");
   </script>
-  <link rel="stylesheet" href="styles.css?v=1122a">
+  <link rel="stylesheet" href="styles.css?v=1122b">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -324,7 +324,7 @@
         <div class="menu-stack">
           <fieldset class="card menu-cat" data-cat="cookie">
             <legend>Cookies</legend>
-            <p class="cat-price"><strong>$2.50</strong> each · <strong>$25</strong> per dozen (12). Same price for every flavor.</p>
+            <p class="cat-price"><strong>$2.50</strong> each · <strong>$25</strong> per dozen (12). Same price for every flavor. For Chocolate Chip with nuts, choose at least one nut. The first is included; each extra nut adds $2 per cookie.</p>
             <div class="menu-photos">
               <figure class="menu-photo">
                 <picture>
@@ -346,6 +346,21 @@
                 <div class="item-info"><label class="item-name" for="qty-cookie-cc-nuts">Chocolate Chip with nuts</label></div>
                 <div class="stepper"><button type="button" class="step" data-step="-1" aria-label="One less Chocolate Chip with nuts">&minus;</button><input type="number" id="qty-cookie-cc-nuts" name="qty-cookie-cc-nuts" class="qty" value="0" min="0" max="240" step="1" inputmode="numeric" autocomplete="off"><button type="button" class="step" data-step="1" aria-label="One more Chocolate Chip with nuts">+</button></div>
                 <button type="button" class="step-dozen" data-step="12" aria-label="Add a dozen Chocolate Chip with nuts">+ 1 dozen</button>
+                <div class="nut-picker" data-nut-picker hidden>
+                  <p class="nut-picker-legend" id="nut-picker-label">Choose your nut <span class="req">*</span></p>
+                  <p class="nut-picker-hint">One nut included. Each extra nut adds $2 per cookie.</p>
+                  <div class="nut-choices" role="group" aria-labelledby="nut-picker-label">
+                    <label class="nut-choice"><input type="checkbox" name="nut-choice" value="Walnuts"> Walnuts</label>
+                    <label class="nut-choice"><input type="checkbox" name="nut-choice" value="Pecans"> Pecans</label>
+                    <label class="nut-choice"><input type="checkbox" name="nut-choice" value="Macadamia"> Macadamia</label>
+                    <label class="nut-choice"><input type="checkbox" name="nut-choice" value="Almonds"> Almonds</label>
+                    <label class="nut-choice"><input type="checkbox" name="nut-choice" value="Other"> Other</label>
+                  </div>
+                  <label class="nut-other-field" data-nut-other hidden>
+                    <span>Which nut? <span class="req">*</span></span>
+                    <input type="text" name="nut-other" autocomplete="off" maxlength="80">
+                  </label>
+                </div>
               </div>
               <div data-static="1" class="item-row has-dozen" data-key="cookie-cc-nonuts" data-name="Chocolate Chip without nuts" data-noun="cookies" data-each="2.5" data-dozen="25">
                 <div class="item-info"><label class="item-name" for="qty-cookie-cc-nonuts">Chocolate Chip without nuts</label></div>
@@ -504,7 +519,7 @@
           </fieldset>
         </div>
 
-        <p class="menu-pdf"><a class="btn btn-ghost" href="menu-holiday.pdf?v=1122a" download="SweetWalks-holiday-menu.pdf">Download the printable menu (PDF)</a></p>
+        <p class="menu-pdf"><a class="btn btn-ghost" href="menu-holiday.pdf?v=1122b" download="SweetWalks-holiday-menu.pdf">Download the printable menu (PDF)</a></p>
       </div>
     </section>
 
@@ -919,6 +934,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1122a"></script>
+  <script src="script.js?v=1122b"></script>
 </body>
 </html>
