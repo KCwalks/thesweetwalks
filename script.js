@@ -1392,3 +1392,49 @@
     if ((deferredPrompt || isIos()) && !dismissedRecently()) showBanner();
   });
 })();
+
+
+// Copy the Zelle number (510) 467-5309 from the How to Pay card.
+(function () {
+  var btn = document.querySelector("[data-zelle-copy]");
+  if (!btn) return;
+  var NUMBER = "5104675309";
+  var defaultLabel = btn.textContent;
+  var resetTimer = null;
+
+  function fallbackCopy() {
+    var ta = document.createElement("textarea");
+    ta.value = NUMBER;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, NUMBER.length);
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (err) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function copyNumber() {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(NUMBER).then(function () { return true; }, function () { return fallbackCopy(); });
+    }
+    return Promise.resolve(fallbackCopy());
+  }
+
+  function showCopied(ok) {
+    btn.textContent = ok ? "Copied!" : "Couldn't copy";
+    if (resetTimer) clearTimeout(resetTimer);
+    resetTimer = setTimeout(function () {
+      btn.textContent = defaultLabel;
+      resetTimer = null;
+    }, 2000);
+  }
+
+  btn.addEventListener("click", function () {
+    copyNumber().then(showCopied);
+  });
+})();

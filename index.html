@@ -37,7 +37,7 @@
     if (window.navigator.standalone) document.documentElement.classList.add("is-standalone");
     else if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) document.documentElement.classList.add("is-standalone");
   </script>
-  <link rel="stylesheet" href="styles.css?v=1123h">
+  <link rel="stylesheet" href="styles.css?v=1124a">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -749,6 +749,11 @@
             <p class="pay-handle">(510) 467-5309</p>
             <p class="hint">Name shows as CHANCE (Chance Walker, co-owner). Scan in your bank's app.</p>
             <img src="images/pay/zelle.png" width="200" height="200" loading="lazy" alt="Zelle QR code for SweetWalks, name CHANCE (Chance Walker, co-owner)">
+            <p class="hint pay-zelle-scan">Scan from your bank app: open your bank app, go to Zelle, tap Send, then tap the QR code icon and scan this code. (Your phone camera alone will open the Zelle website instead.)</p>
+            <div class="pay-zelle-copy-row">
+              <p class="pay-zelle-copy-label">Zelle (510) 467-5309, name CHANCE (Chance Walker, co-owner)</p>
+              <button type="button" class="btn btn-ghost btn-sm pay-zelle-copy" data-zelle-copy aria-live="polite">Copy number</button>
+            </div>
             <a class="pay-link" href="https://enroll.zellepay.com/qr-codes?data=ewogICJhY3Rpb24iIDogInBheW1lbnQiLAogICJ0b2tlbiIgOiAiNTEwNDY3NTMwOSIsCiAgIm5hbWUiIDogIkNIQU5DRSIKfQ==" target="_blank" rel="noopener noreferrer">Open Zelle</a>
           </article>
           <article class="pay-card">
@@ -950,6 +955,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1123h"></script>
+  <script src="script.js?v=1124a"></script>
 </body>
 </html>

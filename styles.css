@@ -1557,6 +1557,30 @@ body.nav-open .float-order { opacity: 0; transform: translateY(1rem); pointer-ev
 .pay-link { font-weight: 700; color: var(--burgundy); display: inline-flex; align-items: center; min-height: 44px; }
 .pay-link:hover { color: var(--pumpkin-deep); }
 
+.pay-zelle-scan {
+  max-width: 18rem;
+  text-align: center;
+}
+.pay-zelle-copy-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem 0.65rem;
+  width: 100%;
+}
+.pay-zelle-copy-label {
+  margin: 0;
+  flex: 1 1 11rem;
+  font-size: 0.95rem;
+  color: var(--ink);
+  text-align: center;
+}
+.pay-zelle-copy {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .pay-cash {
   max-width: 40rem; margin: 0.6rem auto 0;
   background: var(--pink-soft);
@@ -1598,6 +1622,8 @@ body.nav-open .float-order { opacity: 0; transform: translateY(1rem); pointer-ev
   .contact-list > div > * + * { margin-left: 1rem; }
   .cart-right > * + * { margin-left: 0.6rem; }
   .pay-card > * + * { margin-top: 0.4rem; }
+  .pay-zelle-copy-row { margin: -0.225rem -0.325rem; }
+  .pay-zelle-copy-row > * { margin: 0.225rem 0.325rem; }
   .email-chooser-options > * + * { margin-top: 0.6rem; }
 
   .hero-actions,
@@ -1809,7 +1835,7 @@ body { font-size: 1rem; line-height: 1.6; background-image: none; }
 body::before { background: linear-gradient(90deg, #a03651, #e36c8a 35%, #abd2bf 50%, #e36c8a 65%, #a03651); }
 .hint, .note, .fieldset-note, .legal, .form-help, .testimonials-note, .reply-time,
 .order-form label span, .required-note, .allergen-note, .min-order-alert, .cart-remove,
-.footer-contact, .footer-survey, .footer-install, .pay-card .hint, .pay-business, .faq-item p, .policy li { font-size: 1rem; }
+.footer-contact, .footer-survey, .footer-install, .pay-card .hint, .pay-zelle-copy-label, .pay-business, .faq-item p, .policy li { font-size: 1rem; }
 .order-form .field-error { font-size: 1rem; }
 .eyebrow, .banner-kicker { font-size: 0.85rem; }
 .btn { min-height: 52px; font-size: 1.05rem; }
