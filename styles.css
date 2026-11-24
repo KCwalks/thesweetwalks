@@ -2124,7 +2124,7 @@ body.nav-open .install-banner {
 }
 
 
-/* Chocolate Chip with nuts: nut picker */
+/* With-nuts items: nut picker (cookies and brownies) */
 html.no-js .nut-picker[hidden],
 html.no-js .nut-other-field[hidden] { display: block !important; }
 .nut-picker {

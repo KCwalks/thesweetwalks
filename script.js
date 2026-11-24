@@ -17,8 +17,20 @@
   var PICKUP_SLOTS = ["8–9 AM", "9–10 AM", "10–11 AM", "11 AM–12 PM", "12–1 PM", "1–2 PM", "2–3 PM", "3–4 PM", "4–5 PM", "5–6 PM", "6–7 PM", "7–8 PM"];
   var DELIVERY_SLOTS = ["8–11 AM", "11 AM–2 PM", "2–5 PM", "5–8 PM"];
   var DELIVERY_MIN = 25;
-  var NUT_ITEM_KEY = "cookie-cc-nuts";
   var EXTRA_NUT_EACH = 2;
+  var NUT_ITEM_KEYS = {
+    "cookie-cc-nuts": {
+      extraEach: EXTRA_NUT_EACH,
+      payloadChoices: "nut_choices",
+      payloadExtra: "extra_nut_charge",
+      label: "Chocolate Chip with nuts"
+    },
+    "brownie-nuts": {
+      extraEach: 0,
+      payloadChoices: "brownie_nut_choices",
+      label: "Brownies with nuts"
+    }
+  };
   var CAKE_SHAPES = ["Round", "Heart", "Pumpkin"];
   var CAKE_FLAVORS = ["Hot Milk", "Yellow", "Strawberry", "Vanilla", "Chocolate", "Oreo", "Lemon", "7Up", "Pineapple Upside Down"];
   var MAX_QTY = 240;
@@ -83,17 +95,22 @@
     syncRow(row);
   }
 
+  function nutConfig(rowOrKey) {
+    var key = rowOrKey && rowOrKey.getAttribute ? rowOrKey.getAttribute("data-key") : rowOrKey;
+    return (key && NUT_ITEM_KEYS[key]) || null;
+  }
   function isNutRow(row) {
-    return row && row.getAttribute("data-key") === NUT_ITEM_KEY;
+    return !!nutConfig(row);
   }
   function readNutChoices(row) {
     var picks = [];
     var otherText = "";
     var otherChecked = false;
     if (!row) return { picks: picks, otherText: otherText, otherChecked: otherChecked };
-    var boxes = row.querySelectorAll('[data-nut-picker] input[name="nut-choice"]:checked');
-    var otherInput = row.querySelector('input[name="nut-other"]');
+    var boxes = row.querySelectorAll("[data-nut-picker] input[type='checkbox']:checked");
+    var otherInput = row.querySelector("[data-nut-other] input");
     Array.prototype.forEach.call(boxes, function (cb) {
+      if (cb.disabled) return;
       if (cb.value === "Other") {
         otherChecked = true;
         otherText = (otherInput && otherInput.value || "").trim();
@@ -107,8 +124,9 @@
   function extraNutCount(picks) {
     return Math.max(0, (picks && picks.length || 0) - 1);
   }
-  function extraNutChargeFor(picks, qty) {
-    return extraNutCount(picks) * EXTRA_NUT_EACH * qty;
+  function extraNutChargeFor(picks, qty, extraEach) {
+    var each = extraEach == null ? EXTRA_NUT_EACH : extraEach;
+    return extraNutCount(picks) * each * qty;
   }
   function extraNutsLine(extraCount, qty) {
     var noun = qty === 1 ? "cookie" : "cookies";
@@ -121,9 +139,21 @@
     if (!picker) return;
     var on = qtyOf(row) > 0;
     picker.hidden = !on;
-    if (otherBox) {
-      var otherCb = picker.querySelector('input[name="nut-choice"][value="Other"]');
-      otherBox.hidden = !(on && otherCb && otherCb.checked);
+    var otherCb = picker.querySelector('input[type="checkbox"][value="Other"]');
+    var otherOn = !!(on && otherCb && otherCb.checked);
+    if (otherBox) otherBox.hidden = !otherOn;
+    Array.prototype.forEach.call(picker.querySelectorAll('input[type="checkbox"]'), function (inp) {
+      inp.disabled = !on;
+    });
+    var otherInput = otherBox && otherBox.querySelector("input");
+    if (otherInput) otherInput.disabled = !otherOn;
+    if (!on) {
+      picker.classList.remove("has-error");
+      var nerr = picker.querySelector(".field-error");
+      if (nerr && nerr.parentNode === picker) nerr.parentNode.removeChild(nerr);
+      Array.prototype.forEach.call(picker.querySelectorAll("[aria-invalid]"), function (el) {
+        el.removeAttribute("aria-invalid");
+      });
     }
   }
 
@@ -197,14 +227,17 @@
         });
         if (parts.length) item.text += " (" + parts.join("; ") + ")";
       }
-      if (isNutRow(row) && item.priced && item.total != null) {
+      var ncfg = nutConfig(row);
+      if (ncfg) {
         var nuts = readNutChoices(row);
         item.nutChoices = nuts.picks;
         item.nutOther = nuts.otherText;
         item.extraNuts = extraNutCount(nuts.picks);
-        item.extraNutCharge = extraNutChargeFor(nuts.picks, n);
-        item.baseTotal = item.total;
-        item.total = item.baseTotal + item.extraNutCharge;
+        item.extraNutCharge = extraNutChargeFor(nuts.picks, n, ncfg.extraEach);
+        if (item.priced && item.total != null) {
+          item.baseTotal = item.total;
+          item.total = item.baseTotal + item.extraNutCharge;
+        }
         if (nuts.picks.length) item.text += " (" + nuts.picks.join(", ") + ")";
       }
       items.push(item);
@@ -298,7 +331,7 @@
     if (e.target.classList.contains("qty")) {
       syncRow(e.target.closest(".item-row"));
       clearItemsError();
-    } else if (e.target.name === "nut-other") {
+    } else if (e.target.closest("[data-nut-other]")) {
       clearFieldError(e.target);
       updateEstimate();
     }
@@ -453,11 +486,10 @@
   function clearAllErrors() {
     form.querySelectorAll("[aria-invalid]").forEach(clearFieldError);
     form.querySelectorAll(".has-error").forEach(function (n) { n.classList.remove("has-error"); });
-    var nutPicker = form.querySelector("[data-nut-picker]");
-    if (nutPicker) {
+    form.querySelectorAll("[data-nut-picker]").forEach(function (nutPicker) {
       var nerr = nutPicker.querySelector(".field-error");
       if (nerr) nerr.parentNode.removeChild(nerr);
-    }
+    });
     clearItemsError();
     var fe = form.querySelector("[data-form-error]");
     fe.hidden = true;
@@ -477,26 +509,27 @@
       box.appendChild(em);
       problems.push([box, "Pick at least one treat (tap + on the Menu) or write a custom request."]);
     }
-    var nutsRow = form.querySelector('.item-row[data-key="' + NUT_ITEM_KEY + '"]');
-    if (nutsRow && qtyOf(nutsRow) > 0) {
+    rows.forEach(function (nutsRow) {
+      var cfg = nutConfig(nutsRow);
+      if (!cfg || qtyOf(nutsRow) <= 0) return;
       var nuts = readNutChoices(nutsRow);
       var picker = nutsRow.querySelector("[data-nut-picker]");
-      var otherInput = nutsRow.querySelector('input[name="nut-other"]');
+      var otherInput = nutsRow.querySelector("[data-nut-other] input");
       if (!nuts.picks.length) {
         if (picker) {
           picker.classList.add("has-error");
           var nerr = picker.querySelector(".field-error");
           if (!nerr) { nerr = document.createElement("em"); nerr.className = "field-error"; picker.appendChild(nerr); }
           nerr.textContent = "Please choose at least one nut.";
-          var firstCb = picker.querySelector('input[name="nut-choice"]');
+          var firstCb = picker.querySelector('input[type="checkbox"]');
           if (firstCb) firstCb.setAttribute("aria-invalid", "true");
         }
-        problems.push([picker || nutsRow, "Please choose at least one nut for Chocolate Chip with nuts."]);
+        problems.push([picker || nutsRow, "Please choose at least one nut for " + cfg.label + "."]);
       } else if (nuts.otherChecked && nuts.otherText.length < 2) {
         if (otherInput) setFieldError(otherInput, "Please tell us which nut.");
         problems.push([otherInput || picker || nutsRow, "Please tell us which nut you would like (Other)."]);
       }
-    }
+    });
     form.querySelectorAll(".item-row .detail-line").forEach(function (line) {
       var title = line.querySelector(".detail-title").textContent;
       var shape = line.querySelector(".d-shape"), flavor = line.querySelector(".d-flavor");
@@ -620,12 +653,12 @@
       message: body
     };
     if (o.email) data._replyto = o.email;
-    var nutItem = null;
-    o.items.forEach(function (i) { if (i.key === NUT_ITEM_KEY) nutItem = i; });
-    if (nutItem) {
-      data.nut_choices = (nutItem.nutChoices || []).join(", ");
-      data.extra_nut_charge = money(nutItem.extraNutCharge || 0);
-    }
+    o.items.forEach(function (i) {
+      var cfg = NUT_ITEM_KEYS[i.key];
+      if (!cfg) return;
+      data[cfg.payloadChoices] = (i.nutChoices || []).join(", ");
+      if (cfg.payloadExtra) data[cfg.payloadExtra] = money(i.extraNutCharge || 0);
+    });
     return data;
   }
 
@@ -908,10 +941,10 @@
               wanted[label] = true;
             }
           });
-          Array.prototype.forEach.call(picker.querySelectorAll('input[name="nut-choice"]'), function (cb) {
+          Array.prototype.forEach.call(picker.querySelectorAll('input[type="checkbox"]'), function (cb) {
             cb.checked = !!wanted[cb.value];
           });
-          var otherInput = r.querySelector('input[name="nut-other"]');
+          var otherInput = r.querySelector("[data-nut-other] input");
           if (otherInput) otherInput.value = otherText;
           syncNutPicker(r);
         }
@@ -951,6 +984,7 @@
   if (saved && saved.contact) applyContact(saved.contact);
   renderReorder(saved);
   updateClearLink();
+  rows.forEach(syncNutPicker);
   syncFulfillment();
   syncAllergy();
   syncDate();
@@ -966,7 +1000,7 @@
     if (hero) new IntersectionObserver(function (en) { hide.hero = en[0].isIntersecting; sync(); }, { threshold: 0, rootMargin: "-80px 0px -90px 0px" }).observe(hero);
   }
 
-  window.swOrderDebug = { cartItems: cartItems, spellDate: spellDate, orderInfo: orderInfo, orderText: orderText, payload: payload, extraNutsLine: extraNutsLine };
+  window.swOrderDebug = { cartItems: cartItems, spellDate: spellDate, orderInfo: orderInfo, orderText: orderText, payload: payload, extraNutsLine: extraNutsLine, validateOrder: validateOrder };
 })();
 
 
