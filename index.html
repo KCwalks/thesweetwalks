@@ -37,7 +37,7 @@
     if (window.navigator.standalone) document.documentElement.classList.add("is-standalone");
     else if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) document.documentElement.classList.add("is-standalone");
   </script>
-  <link rel="stylesheet" href="styles.css?v=1126a">
+  <link rel="stylesheet" href="styles.css?v=1126b">
   <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -449,6 +449,15 @@
 
           <fieldset class="card menu-cat" data-cat="cake">
             <legend>Cakes</legend>
+            <div class="menu-photos">
+              <figure class="menu-photo">
+                <picture>
+                  <source type="image/webp" srcset="images/cakes/7up-bundt-cake.webp">
+                  <img src="images/cakes/7up-bundt-cake.jpg" width="865" height="1000" loading="lazy" alt="7Up Bundt Cake in its pan">
+                </picture>
+                <figcaption>7Up Bundt Cake</figcaption>
+              </figure>
+            </div>
             <div class="item-list">
               <div data-static="1" class="item-row" data-key="cake-8in" data-name="8&quot; Two-Layer Cake" data-price="40" data-details="layer" data-desc="Round, heart, or Pumpkin shape. A Pumpkin-shaped two-layer cake is a Thanksgiving centerpiece in any of our cake flavors. Flavors: Hot Milk, Yellow, Strawberry, Vanilla, Chocolate, Oreo, Lemon, 7Up, Pineapple Upside Down.">
                 <div class="item-info"><label class="item-name" for="qty-cake-8in">8&quot; Two-Layer Cake</label><span class="item-price">$40</span><span class="item-desc">Round, heart, or Pumpkin shape. A Pumpkin-shaped two-layer cake is a Thanksgiving centerpiece in any of our cake flavors. Flavors: Hot Milk, Yellow, Strawberry, Vanilla, Chocolate, Oreo, Lemon, 7Up, Pineapple Upside Down.</span></div>
@@ -964,6 +973,6 @@
 
   <a class="float-order is-hidden" href="#order" data-float-order>Order Now</a>
 
-  <script src="script.js?v=1126a"></script>
+  <script src="script.js?v=1126b"></script>
 </body>
 </html>
